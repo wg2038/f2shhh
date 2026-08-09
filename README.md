@@ -21,9 +21,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/main_screen.jpg" width="280" alt="Main Screen">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="docs/screenshots/permissions_expanded.jpg" width="280" alt="Permissions Expanded">
+  <img src="docs/screenshots/main_screen.jpg" width="240" alt="Main Screen">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/permissions_expanded.jpg" width="240" alt="Permissions Panel">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/settings_sheet.jpg" width="240" alt="Settings Sheet">
 </p>
 
 ---
