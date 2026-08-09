@@ -18,6 +18,12 @@
   </p>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/main_screen.jpg" width="280" alt="Main Screen">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/permissions_expanded.jpg" width="280" alt="Permissions Expanded">
+</p>
+
 ---
 
 ## 🇬🇧 Flip to Shhh
@@ -59,7 +65,7 @@
 
 ## 🇭🇰 🇹🇼 Flip to Shhh (繁體中文)
 
-**Flip to Shhh** 是一款專為 Samsung Galaxy S 系列旗艦裝置打造的高效能、超低功耗常駐翻轉靜音小工具。只需將手機螢幕朝下放置在桌面上，即可瞬時開啟勿擾（DND）與靜音，並伴隨地道的 One UI 雙脈衝觸感反饋。
+**Flip to Shhh** 是一款專為 Samsung Galaxy S 系列旗艦裝置打造的高效能、超低功耗常駐翻轉靜音小工具。只需將手機螢幕朝下放置在桌面上，即可順時開啟勿擾（DND）與靜音，並伴隨地道的 One UI 雙脈衝觸感反饋。
 
 ### ✨ 核心特色
 
