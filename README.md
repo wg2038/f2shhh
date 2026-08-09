@@ -7,14 +7,16 @@
   <p align="center">
     <a href="#-flip-to-shhh">English</a> •
     <a href="#-flip-to-shhh-简体中文">简体中文</a> •
-    <a href="#-flip-to-shhh-繁體中文">繁體中文</a>
+    <a href="#-flip-to-shhh-繁體中文">繁體中文</a> •
+    <a href="#-tech-architecture--docs">Architecture</a>
   </p>
   <p align="center">
+    <a href="https://github.com/wg2038/f2shhh/releases/latest"><img src="https://img.shields.io/github/v/release/wg2038/f2shhh?style=flat-square&color=blue" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
     <img src="https://img.shields.io/badge/Design-One_UI_6.x_/_Material_3-0057FF?style=flat-square" alt="One UI">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
     <img src="https://img.shields.io/badge/APK_Size-2.2_MB-success?style=flat-square" alt="Size">
-    <img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
   </p>
 </p>
 
@@ -38,13 +40,6 @@
 - 🚀 **Direct Boot Resilience**: Full support for Android 13 Direct Boot (`ACTION_LOCKED_BOOT_COMPLETED`), restoring gesture monitoring immediately after device reboots before first unlock.
 - 📦 **Featherweight Footprint**: Custom hand-drawn vector icon architecture resulting in an official Release APK size of **only ~2.2 MB**.
 - 🛡️ **Privacy & Offline First**: 100% offline with zero network permissions, zero analytics, and zero data collection.
-
-### 🛠️ Tech Stack & Architecture
-
-- **UI & Theme**: Kotlin + Jetpack Compose (Material 3 / One UI Dynamic Color)
-- **Core Service**: `Foreground Service` + `SensorEventListener` (TYPE_GRAVITY & TYPE_GYROSCOPE)
-- **System Integration**: `NotificationManager` (DND Policy Access) + `AccessibilityService` (System Lock)
-- **Boot Persistence**: `BroadcastReceiver` with Direct Boot Awareness
 
 ---
 
@@ -75,6 +70,12 @@
 - 🚀 **Direct Boot (冷啟動保護)**：支援 Android 13 Direct Boot 機制，裝置重啟後無需解鎖螢幕即可自動恢復手勢監聽。
 - 📦 **羽量級極簡體積**：採用純手寫向量圖示庫，正式 Release APK 體積**僅約 2.2 MB**，不佔用系統記憶體。
 - 🛡️ **完全離線與隱私保護**：無任何網路權限、無廣告、無後台資料上報，零隱私洩露風險。
+
+---
+
+## 🛠️ Tech Architecture & Docs
+
+For detailed technical architecture, sensor algorithms, and APK size optimization reports, please read the [DOCS.md](DOCS.md) document.
 
 ---
 
