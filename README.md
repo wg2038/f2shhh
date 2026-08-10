@@ -18,19 +18,27 @@
   </p>
 </p>
 
+<br>
+
 <p align="center">
-  <img src="docs/screenshots/main_screen.jpg" width="240" alt="Main Screen">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/permissions_expanded.jpg" width="240" alt="Permissions Panel">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/settings_sheet.jpg" width="240" alt="Settings Sheet">
+  <a href="docs/screenshots/main_screen.jpg">
+    <img src="docs/screenshots/main_screen.jpg" width="240" alt="Main Screen">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="docs/screenshots/permissions_expanded.jpg">
+    <img src="docs/screenshots/permissions_expanded.jpg" width="240" alt="Permissions Panel">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="docs/screenshots/settings_sheet.jpg">
+    <img src="docs/screenshots/settings_sheet.jpg" width="240" alt="Settings Sheet">
+  </a>
 </p>
 
 ---
 
 ## 📖 Introduction
 
-**Flip to Shhh** is a high-performance, ultra-lightweight, and zero-ad background service designed specifically for Samsung Galaxy S Series flagship smartphones (Android 13+). Simply flip your phone face down on a surface to instantly activate Do Not Disturb (DND) mode and lock your screen, accompanied by authentic Samsung One UI haptic tactile feedback.
+**Flip to Shhh** is a high-performance, ultra-lightweight, and zero-ad background utility designed specifically for Samsung Galaxy S Series flagship smartphones (Android 13+). Simply flip your phone face down on a surface to instantly activate Do Not Disturb (DND) mode and lock your screen, accompanied by authentic Samsung One UI haptic tactile feedback.
 
 ---
 

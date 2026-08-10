@@ -18,12 +18,20 @@
   </p>
 </p>
 
+<br>
+
 <p align="center">
-  <img src="docs/screenshots/main_screen.jpg" width="240" alt="主界面">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/permissions_expanded.jpg" width="240" alt="权限管理">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/settings_sheet.jpg" width="240" alt="高级设置">
+  <a href="docs/screenshots/main_screen.jpg">
+    <img src="docs/screenshots/main_screen.jpg" width="240" alt="主界面">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="docs/screenshots/permissions_expanded.jpg">
+    <img src="docs/screenshots/permissions_expanded.jpg" width="240" alt="权限管理">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="docs/screenshots/settings_sheet.jpg">
+    <img src="docs/screenshots/settings_sheet.jpg" width="240" alt="高级设置">
+  </a>
 </p>
 
 ---

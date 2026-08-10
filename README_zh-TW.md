@@ -18,12 +18,20 @@
   </p>
 </p>
 
+<br>
+
 <p align="center">
-  <img src="docs/screenshots/main_screen.jpg" width="240" alt="主畫面">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/permissions_expanded.jpg" width="240" alt="權限管理">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/settings_sheet.jpg" width="240" alt="高級設定">
+  <a href="docs/screenshots/main_screen.jpg">
+    <img src="docs/screenshots/main_screen.jpg" width="240" alt="主畫面">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="docs/screenshots/permissions_expanded.jpg">
+    <img src="docs/screenshots/permissions_expanded.jpg" width="240" alt="權限管理">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="docs/screenshots/settings_sheet.jpg">
+    <img src="docs/screenshots/settings_sheet.jpg" width="240" alt="高級設定">
+  </a>
 </p>
 
 ---
@@ -49,7 +57,7 @@
 
 ### 4. 無損鎖屏與 DND 智慧歸屬追蹤
 - **完美保留生物識別解鎖**：基於 Android 原生無障礙服務（`GLOBAL_ACTION_LOCK_SCREEN`），鎖屏後仍可順暢使用指紋與人臉解鎖（避免了傳統 DeviceAdmin API 導致必須輸入 PIN/密碼的缺陷）。
-- **DND 智慧歸屬追蹤**：自動相容系統定時勿擾（如 23:00–07:00）。若扣下手機前系統已被定時器開啟勿擾，翻轉朝上時**絕不會誤將系統勿擾關閉或反向誤拉起**，完全尊重系統自身的生命週期。
+- **DND 智慧歸屬追蹤**：自動相容系統定時勿擾（如 23:00–07:00）。若扣下手機前系統已被定時器開啟勿擾，翻轉朝上時**絕不會誤將系統勿擾關閉或反向誤拉起**，完全尊重系統自身的生命周期。
 
 ---
 
