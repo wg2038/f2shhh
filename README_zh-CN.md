@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">🤫 Flip to Shhh</h1>
   <p align="center">
-    <strong>专为三星 Galaxy S 系列（Android 13+）打造的高精度、超低功耗常驻翻转勿扰工具</strong>
+    <strong>专为 Android 13+ 打造的高精度、超低功耗常驻翻转勿扰工具（深度兼容三星 Galaxy、小米/HyperOS 等主流品牌）</strong>
   </p>
   <p align="center">
     <a href="README.md">English</a> •
@@ -11,7 +11,7 @@
   <p align="center">
     <a href="https://github.com/wg2038/f2shhh/releases/latest"><img src="https://img.shields.io/github/v/release/wg2038/f2shhh?style=flat-square&color=blue" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
-    <img src="https://img.shields.io/badge/Design-One_UI_6.x_/_Material_3-0057FF?style=flat-square" alt="One UI">
+    <img src="https://img.shields.io/badge/Compatibility-Samsung_/_Xiaomi_/_Pixel_/_Android-0057FF?style=flat-square" alt="Compatibility">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
     <img src="https://img.shields.io/badge/APK_Size-~2.2_MB-success?style=flat-square" alt="Size">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
@@ -38,14 +38,16 @@
 
 ## 📖 项目简介
 
-**Flip to Shhh** 是一款专为三星 Galaxy S 系列 flagship 智能手机（Android 13+）打造的无广告、超低功耗常驻翻转静音工具。只需将手机屏幕朝下扣在桌面上，即可瞬时开启勿扰模式（DND）并自动熄屏锁屏，同时伴随地道的三星 One UI 双脉冲触感震动反馈。
+**Flip to Shhh** 是一款专为 Android 13+ 智能手机打造的无广告、超低功耗常驻翻转静音工具。只需将手机屏幕朝下扣在桌面上，即可瞬时开启勿扰模式（DND）并自动熄屏锁屏。
+
+虽然初始设计深度针对三星 One UI 进行触感调优，但由于全量采用 Android 框架原生标准 API（`TYPE_GRAVITY` 重力向量、`GLOBAL_ACTION_LOCK_SCREEN` 原生锁屏等），应用在**小米/MIUI/HyperOS**、一加、Google Pixel 等各类 Android 机型上均具备极高的稳定度与兼容性。
 
 ---
 
 ## ⚡ 核心技术架构与亮点
 
 ### 1. 纯重力向量算法（不依赖光线/近距离传感器）
-不同于传统静音应用依赖屏下光线/近距离传感器持续轮询（会导致三星屏下光线传感器发热与阻断 CPU 深度休眠），**Flip to Shhh** 完全基于 `TYPE_GRAVITY`（重力向量）与 `TYPE_GYROSCOPE`（陀螺仪）融合算法，保证设备进入 Deep Sleep 深度休眠。
+不同于传统静音应用依赖屏下光线/近距离传感器持续轮询（会导致屏下光线传感器发热与阻断 CPU 深度休眠），**Flip to Shhh** 完全基于 `TYPE_GRAVITY`（重力向量）与 `TYPE_GYROSCOPE`（陀螺仪）融合算法，保证设备进入 Deep Sleep 深度休眠。
 
 ### 2. 硬件 FIFO 批量上报（50ms 延时）
 通过 `BATCH_LATENCY_US = 50_000` 订阅 Sensor Hub 硬件 FIFO 队列。传感器数据由低功耗 DSP 协处理器在 50ms 周期内批量处理，极大降低 CPU 唤醒频率，实现近乎为零的后台功耗。
@@ -65,7 +67,7 @@
 
 - 🔒 **勿扰权限** (`ACCESS_NOTIFICATION_POLICY`)：用于切换系统 Do Not Disturb 状态。
 - ♿ **无障碍服务** (`GLOBAL_ACTION_LOCK_SCREEN`)：可选权限，仅用于翻转扣下时调用系统原生熄屏锁屏。
-- 🔋 **忽略电池优化**：确保后台传感器监听在 One UI 内存清理下稳定存活。
+- 🔋 **忽略电池优化**：确保后台传感器监听在系统内存清理下稳定存活。
 - 🛡️ **100% 完全离线**：Manifest 中**未声明任何网络权限**（`INTERNET`），无广告、无任何数据统计与上报，零隐私泄露隐患。
 
 ---

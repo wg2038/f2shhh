@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">🤫 Flip to Shhh</h1>
   <p align="center">
-    <strong>Ultra-Low Power, Precision Flip-to-Mute Utility Tailored for Samsung Galaxy S Series (Android 13+)</strong>
+    <strong>Ultra-Low Power, Precision Flip-to-Mute Utility for Android 13+ (Broadly Compatible with Samsung Galaxy, Xiaomi/HyperOS, Pixel & More)</strong>
   </p>
   <p align="center">
     <a href="README.md">English</a> •
@@ -11,7 +11,7 @@
   <p align="center">
     <a href="https://github.com/wg2038/f2shhh/releases/latest"><img src="https://img.shields.io/github/v/release/wg2038/f2shhh?style=flat-square&color=blue" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
-    <img src="https://img.shields.io/badge/Design-One_UI_6.x_/_Material_3-0057FF?style=flat-square" alt="One UI">
+    <img src="https://img.shields.io/badge/Compatibility-Samsung_/_Xiaomi_/_Pixel_/_Android-0057FF?style=flat-square" alt="Compatibility">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
     <img src="https://img.shields.io/badge/APK_Size-~2.2_MB-success?style=flat-square" alt="Size">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
@@ -38,14 +38,16 @@
 
 ## 📖 Introduction
 
-**Flip to Shhh** is a high-performance, ultra-lightweight, and zero-ad background utility designed specifically for Samsung Galaxy S Series flagship smartphones (Android 13+). Simply flip your phone face down on a surface to instantly activate Do Not Disturb (DND) mode and lock your screen, accompanied by authentic Samsung One UI haptic tactile feedback.
+**Flip to Shhh** is a high-performance, ultra-lightweight, and zero-ad background utility designed for Android 13+ smartphones. Simply flip your phone face down on a surface to instantly activate Do Not Disturb (DND) mode and lock your screen.
+
+While tailored with Samsung One UI haptics in mind, it is built 100% on standard Android framework APIs (`TYPE_GRAVITY` gravity vector, `GLOBAL_ACTION_LOCK_SCREEN` native lock screen), ensuring exceptional stability and compatibility across Android 13+ smartphones, including **Xiaomi / MIUI / HyperOS**, OnePlus, Google Pixel, and more.
 
 ---
 
 ## ⚡ Core Technical Architecture & Highlights
 
 ### 1. Pure Gravity Vector Algorithm (No Light Sensor Dependency)
-Unlike generic flip-to-mute apps that continuously poll proximity or under-display light sensors (which cause CPU wake locks and OLED panel battery drain on Samsung flagships), **Flip to Shhh** relies exclusively on the fused `TYPE_GRAVITY` and `TYPE_GYROSCOPE` hardware sensors. This guarantees zero impact on device Deep Sleep.
+Unlike generic flip-to-mute apps that continuously poll proximity or under-display light sensors (which cause CPU wake locks and OLED panel battery drain), **Flip to Shhh** relies exclusively on the fused `TYPE_GRAVITY` and `TYPE_GYROSCOPE` hardware sensors. This guarantees zero impact on device Deep Sleep across all supported Android brands.
 
 ### 2. Hardware FIFO Batching (50ms Latency)
 Utilizes hardware-level sensor batching (`BATCH_LATENCY_US = 50_000`) offloaded to the low-power Sensor Hub DSP. Sensor data is processed in batches every 50ms, drastically reducing CPU interrupts and eliminating power consumption during idle state.
@@ -65,7 +67,7 @@ To prevent accidental triggers caused by micro-vibrations or placing the phone i
 
 - 🔒 **Do Not Disturb Access** (`ACCESS_NOTIFICATION_POLICY`): Required to toggle system DND state.
 - ♿ **Accessibility Service** (`GLOBAL_ACTION_LOCK_SCREEN`): Optional, used exclusively to lock screen on flip-down.
-- 🔋 **Ignore Battery Optimization**: Ensures background sensor monitoring survives One UI memory management.
+- 🔋 **Ignore Battery Optimization**: Ensures background sensor monitoring survives Android memory management.
 - 🛡️ **100% Offline & Zero Data Collection**: Contains **ZERO network permissions** (`INTERNET` permission is omitted in manifest), zero ads, and zero analytics.
 
 ---
