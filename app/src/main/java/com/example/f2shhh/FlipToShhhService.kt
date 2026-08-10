@@ -70,6 +70,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     private var previousRingerMode: Int = AudioManager.RINGER_MODE_NORMAL
     private var previousInterruptionFilter: Int = NotificationManager.INTERRUPTION_FILTER_ALL
+    private var wasDndActivatedByService: Boolean = false
 
     private enum class TargetFlipState { NONE, DOWN, UP }
     private var pendingTargetState: TargetFlipState = TargetFlipState.NONE
@@ -144,6 +145,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             previousInterruptionFilter = prefs.getInt(
                 KEY_PREV_INTERRUPTION_FILTER, NotificationManager.INTERRUPTION_FILTER_ALL
             )
+            wasDndActivatedByService = prefs.getBoolean(KEY_WAS_DND_ACTIVATED_BY_SERVICE, false)
             _isDndActive.value = true
             _isFlippedDown.value = true
         }
@@ -293,9 +295,20 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             // 1. Trigger haptic feedback FIRST before DND activation & screen locking
             triggerFlipDownHaptic()
 
-            // 2. Turn on DND mode
-            previousInterruptionFilter = notifManager.currentInterruptionFilter
-            notifManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+            // 2. Check current DND mode prior to flip-down
+            val currentFilter = notifManager.currentInterruptionFilter
+            if (currentFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
+                // DND was OFF when user flipped down -> service activates DND
+                previousInterruptionFilter = currentFilter
+                notifManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+                wasDndActivatedByService = true
+                Log.i(TAG, "DND mode activated by service (from INTERRUPTION_FILTER_ALL)")
+            } else {
+                // DND was ALREADY active prior to flip-down (e.g. system schedule or manual DND).
+                // Do not override system DND lifecycle when flipping up later.
+                wasDndActivatedByService = false
+                Log.i(TAG, "DND was already active ($currentFilter) prior to flip-down; service will not override DND exit lifecycle")
+            }
 
             persistState(active = true)
             _isDndActive.value = true
@@ -304,7 +317,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             // 3. Perform lock screen after haptic has been executed
             val autoLockPref = prefs.getBoolean(KEY_AUTO_LOCK_SCREEN, true)
             val accessibilityEnabled = FlipLockAccessibilityService.isAccessibilityServiceEnabled(this)
-            Log.i(TAG, "DND mode successfully enabled! autoLockPref=$autoLockPref, accessibilityEnabled=$accessibilityEnabled")
+            Log.i(TAG, "DND mode setup complete! autoLockPref=$autoLockPref, accessibilityEnabled=$accessibilityEnabled")
 
             if (autoLockPref && accessibilityEnabled) {
                 val locked = FlipLockAccessibilityService.performLock()
@@ -324,13 +337,17 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             // Only restore if we were the ones who changed it.
             if (!_isDndActive.value) return
 
-            notifManager.setInterruptionFilter(previousInterruptionFilter)
+            if (wasDndActivatedByService) {
+                notifManager.setInterruptionFilter(previousInterruptionFilter)
+                Log.i(TAG, "DND disabled, restored interruptionFilter=$previousInterruptionFilter")
+            } else {
+                Log.i(TAG, "DND was already active prior to flip-down; leaving current system DND state untouched")
+            }
 
             persistState(active = false)
             _isDndActive.value = false
             triggerFlipUpHaptic()
             updateNotification(active = false)
-            Log.i(TAG, "DND disabled, restored interruptionFilter=$previousInterruptionFilter")
         } catch (e: Exception) {
             Log.e(TAG, "Error disabling DND", e)
         }
@@ -339,7 +356,9 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     private fun restoreDndIfNeeded() {
         if (_isDndActive.value && notifManager.isNotificationPolicyAccessGranted) {
             try {
-                notifManager.setInterruptionFilter(previousInterruptionFilter)
+                if (wasDndActivatedByService) {
+                    notifManager.setInterruptionFilter(previousInterruptionFilter)
+                }
                 persistState(active = false)
                 _isDndActive.value = false
             } catch (e: Exception) {
@@ -355,6 +374,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             .putBoolean(KEY_DND_ACTIVE, active)
             .putInt(KEY_PREV_RINGER_MODE, previousRingerMode)
             .putInt(KEY_PREV_INTERRUPTION_FILTER, previousInterruptionFilter)
+            .putBoolean(KEY_WAS_DND_ACTIVATED_BY_SERVICE, wasDndActivatedByService)
             .apply()
     }
 
@@ -491,6 +511,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         private const val KEY_DND_ACTIVE = "dnd_active"
         private const val KEY_PREV_RINGER_MODE = "prev_ringer_mode"
         private const val KEY_PREV_INTERRUPTION_FILTER = "prev_interruption_filter"
+        private const val KEY_WAS_DND_ACTIVATED_BY_SERVICE = "was_dnd_activated_by_service"
 
         const val KEY_DEBOUNCE_MS = "debounce_ms"
         const val DEFAULT_DEBOUNCE_MS = 2000L

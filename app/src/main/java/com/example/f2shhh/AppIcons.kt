@@ -296,7 +296,7 @@ object AppIcons {
             verticalLineToRelative(10f)
             curveTo(4f, 21.1f, 4.9f, 22f, 6f, 22f)
             horizontalLineToRelative(12f)
-            curveTo(13.1f, 22f, 20f, 21.1f, 20f, 20f)
+            curveTo(19.1f, 22f, 20f, 21.1f, 20f, 20f)
             lineTo(20f, 10f)
             curveTo(20f, 8.9f, 19.1f, 8f, 18f, 8f)
             close()

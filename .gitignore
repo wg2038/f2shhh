@@ -1,10 +1,34 @@
-*.iml
-.gradle
-/local.properties
-/.idea
-.DS_Store
-/build
-/captures
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Files for the ART/DALVIK preview
+*.dex
+
+# External native build output
 .externalNativeBuild
-.cxx
+.cxx/
+
+# IDE & Build tool outputs
+*.iml
+.gradle/
+/local.properties
 local.properties
+/.idea/
+.idea/
+.kotlin/
+.DS_Store
+/build/
+app/build/
+/captures
+
+# Logs & temp files
+*.log
+*.tmp
+
+# AI Agent & Workspace Scratch directories
+.workbuddy/
+.cowork-temp/
+.cursor/
+.cline/
