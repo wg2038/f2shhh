@@ -230,15 +230,17 @@ object AppStrings {
             "perm_dnd_granted" -> if (isEng) "Granted" else if (isTrad) "已授權" else "已授权"
             "perm_dnd_missing", "perm_dnd_required" -> if (isEng) "Tap to grant DND permission" else if (isTrad) "未授權 · 點擊前往設定" else "未授权 · 点击前往设置"
             "perm_dnd_required_banner" -> if (isEng) "DND permission required to enable mute" else if (isTrad) "勿擾模式權限未授予，無法開啟靜音" else "勿扰模式权限未授予，无法开启静音"
-            "perm_dnd_desc" -> if (isEng) "Allow automatic DND & mute toggling" else if (isTrad) "允許自動切換勿擾與靜音" else "允许自动切换勿扰与静音"
+            "perm_dnd_desc" -> if (isEng) "Allow app to automatically toggle DND & mute" else if (isTrad) "允許應用自動開啟勿擾模式" else "允许应用自动开启勿扰模式"
 
             "perm_battery_title" -> if (isEng) "Background Battery Optimization" else if (isTrad) "後台電池優化" else "后台电池优化"
             "perm_battery_granted" -> if (isEng) "Battery optimization ignored" else if (isTrad) "已忽略電池優化" else "已忽略电池优化"
-            "perm_battery_missing", "perm_battery_required", "perm_battery_desc" -> if (isEng) "Tap to disable optimization" else if (isTrad) "未忽略 · 點擊允許後台運行" else "未忽略 · 点击允许后台运行"
+            "perm_battery_missing", "perm_battery_required" -> if (isEng) "Tap to disable optimization" else if (isTrad) "未忽略 · 點擊允許後台運行" else "未忽略 · 点击允许后台运行"
+            "perm_battery_desc" -> if (isEng) "Keep service running stably in background" else if (isTrad) "允許後台無限制運行，避免被系統清理" else "允许后台无限制运行，避免被系统清理"
 
             "perm_accessibility_title", "perm_access_title" -> if (isEng) "Accessibility Lock Service" else if (isTrad) "無障礙鎖屏服務" else "无障碍锁屏服务"
             "perm_accessibility_granted", "perm_access_granted" -> if (isEng) "Granted" else if (isTrad) "已授權" else "已授权"
-            "perm_accessibility_missing", "perm_access_required", "perm_access_desc" -> if (isEng) "Tap to enable accessibility" else if (isTrad) "未授權 · 點擊開啟無障礙" else "未授权 · 点击开启无障碍"
+            "perm_accessibility_missing", "perm_access_required" -> if (isEng) "Tap to enable accessibility" else if (isTrad) "未授權 · 點擊開啟無障礙" else "未授权 · 点击开启无障碍"
+            "perm_access_desc" -> if (isEng) "Lock screen simultaneously when muted" else if (isTrad) "翻轉靜音時自動熄屏鎖屏" else "翻转静音时自动熄屏锁屏"
 
             "perm_notification_title", "perm_notif_optional_title" -> if (isEng) "Notification Access" else if (isTrad) "通知權限" else "通知权限"
             "perm_notification_granted" -> if (isEng) "Granted" else if (isTrad) "已授權" else "已授权"
@@ -255,17 +257,9 @@ object AppStrings {
             "setting_language", "lang_title" -> if (isEng) "Language" else if (isTrad) "語言" else "语言"
             "setting_about", "about_app_title" -> "Flip to Shhh"
 
-            "group_response" -> if (isEng) "Response" else if (isTrad) "響應" else "响应"
-            "group_appearance" -> if (isEng) "Appearance" else if (isTrad) "外觀" else "外观"
+            "group_permissions" -> if (isEng) "Core Permissions" else if (isTrad) "核心權限" else "核心权限"
+            "group_appearance" -> if (isEng) "Appearance & Language" else if (isTrad) "外觀與語言" else "外观与语言"
             "group_about" -> if (isEng) "About" else if (isTrad) "關於" else "关于"
-
-            "haptic_title" -> if (isEng) "Haptic Feedback" else if (isTrad) "震動觸感反饋" else "震动触感反馈"
-            "haptic_double" -> if (isEng) "Double Pulse" else if (isTrad) "雙脈衝" else "双脉冲"
-            "haptic_single" -> if (isEng) "Single Tick" else if (isTrad) "輕觸" else "轻触"
-            "haptic_off" -> if (isEng) "Off" else if (isTrad) "關閉" else "关闭"
-
-            "advanced_title" -> if (isEng) "Advanced Settings" else if (isTrad) "高級設定" else "高级设置"
-            "debounce_title" -> if (isEng) "Flip-down Debounce" else if (isTrad) "翻轉等待時間" else "翻转等待时间"
 
             "theme_title" -> if (isEng) "Theme Mode" else if (isTrad) "外觀與主題" else "外观与主题"
             "sys_default" -> if (isEng) "System" else if (isTrad) "跟隨系統" else "跟随系统"
@@ -278,16 +272,16 @@ object AppStrings {
 
             // 4. About Screen
             "nav_back" -> if (isEng) "Back" else if (isTrad) "返回" else "返回"
-            "about_developer" -> if (isEng) "Customized for Samsung Galaxy S" else if (isTrad) "為 Samsung Galaxy S 定製" else "为三星 Galaxy S 定制"
+            "about_developer" -> if (isEng) "Flip to DND for non-Pixel devices (Android 13+)" else if (isTrad) "為非Pixel設備提供的 Flip to DND (Android 13+)" else "为非Pixel设备提供的 Flip to DND (Android 13+)"
             "about_privacy_title" -> if (isEng) "Privacy" else if (isTrad) "隱私承諾" else "隐私承诺"
             "about_privacy_body" -> if (isEng) "Fully offline, zero data collected." else if (isTrad) "完全離線，資料零收集。" else "完全离线，数据零收集。"
             "about_license_title" -> if (isEng) "Open Source License" else if (isTrad) "開源許可" else "开源许可"
-            "about_license_body" -> if (isEng) "Apache License 2.0" else if (isTrad) "Apache License 2.0" else "Apache License 2.0"
+            "about_license_body" -> "MIT License"
 
             "onboarding_welcome_title" -> if (isEng) "Flip to Shhh" else if (isTrad) "翻轉靜音" else "翻转静音"
-            "onboarding_welcome_desc" -> if (isEng) "Place your phone face down to automatically enable Do Not Disturb & mute.\nDesigned for Samsung Galaxy, ultra-low power sensor solution."
-                                          else if (isTrad) "將手機翻轉面朝下放置，自動開啟勿擾與靜音。\n專為三星旗艦打造，超低功耗感應器方案。"
-                                          else "将手机翻转面朝下放置，自动开启勿扰与静音。\n专为三星旗舰打造，超低功耗传感器方案。"
+            "onboarding_welcome_desc" -> if (isEng) "Place your phone face down to automatically enable Do Not Disturb & mute.\nDesigned for non-Pixel Android 13+ devices, ultra-low power sensor solution."
+                                          else if (isTrad) "將手機翻轉面朝下放置，自動開啟勿擾與靜音。\n為非Pixel等設備打造，超低功耗高精度感應器方案。"
+                                          else "将手机翻转面朝下放置，自动开启勿扰与静音。\n为非Pixel等设备打造，超低功耗高精度传感器方案。"
             "onboarding_swipe_hint" -> if (isEng) "Swipe left to set permissions" else if (isTrad) "向左滑動設定權限" else "向左滑动设置权限"
             "onboarding_perm_title" -> if (isEng) "Set Permissions" else if (isTrad) "設定權限" else "设置权限"
             "onboarding_perm_desc" -> if (isEng) "Grant the following permissions to ensure normal operation"
@@ -295,6 +289,7 @@ object AppStrings {
                                         else "开启以下权限以确保功能正常运行"
             "onboarding_start_btn" -> if (isEng) "Get Started" else if (isTrad) "開始使用" else "开始使用"
             "onboarding_setup_required_btn" -> if (isEng) "Please set required permissions" else if (isTrad) "請先完成權限設定" else "请先完成权限设置"
+            "btn_cancel" -> if (isEng) "Cancel" else if (isTrad) "取消" else "取消"
 
             else -> key
         }
@@ -451,14 +446,12 @@ fun OnboardingScreen(onComplete: () -> Unit) {
 
     var hasDndPermission by remember { mutableStateOf(checkDndPermission(context)) }
     var isIgnoringBatteryOptimization by remember { mutableStateOf(checkBatteryOptimization(context)) }
-    var hasNotificationPermission by remember { mutableStateOf(checkNotificationPermission(context)) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 hasDndPermission = checkDndPermission(context)
                 isIgnoringBatteryOptimization = checkBatteryOptimization(context)
-                hasNotificationPermission = checkNotificationPermission(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -481,10 +474,8 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 1 -> OnboardingPermissionsPage(
                     hasDndPermission = hasDndPermission,
                     isIgnoringBatteryOptimization = isIgnoringBatteryOptimization,
-                    hasNotificationPermission = hasNotificationPermission,
                     onGrantDnd = { openDndPermissionSettings(context) },
                     onRequestBatteryOptimization = { requestIgnoreBatteryOptimization(context) },
-                    onRequestNotificationPermission = { requestNotificationPermission(context) },
                     allGranted = allGranted,
                     languageMode = languageMode,
                     onComplete = onComplete
@@ -571,10 +562,8 @@ fun OnboardingWelcomePage(languageMode: Int) {
 fun OnboardingPermissionsPage(
     hasDndPermission: Boolean,
     isIgnoringBatteryOptimization: Boolean,
-    hasNotificationPermission: Boolean,
     onGrantDnd: () -> Unit,
     onRequestBatteryOptimization: () -> Unit,
-    onRequestNotificationPermission: () -> Unit,
     allGranted: Boolean,
     languageMode: Int,
     onComplete: () -> Unit
@@ -616,14 +605,6 @@ fun OnboardingPermissionsPage(
             isGranted = isIgnoringBatteryOptimization,
             languageMode = languageMode,
             onAction = onRequestBatteryOptimization
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OnboardingPermissionItem(
-            title = AppStrings.get(context, "perm_notif_optional_title", languageMode),
-            desc = AppStrings.get(context, "perm_notif_optional_sub", languageMode),
-            isGranted = hasNotificationPermission,
-            languageMode = languageMode,
-            onAction = onRequestNotificationPermission
         )
 
         Spacer(modifier = Modifier.height(36.dp))
@@ -719,7 +700,6 @@ fun FlipToShhhScreen(
     val coroutineScope = rememberCoroutineScope()
     var hasDndPermission by remember { mutableStateOf(true) }
     var isIgnoringBatteryOptimization by remember { mutableStateOf(true) }
-    var hasNotificationPermission by remember { mutableStateOf(true) }
     var hasAccessibilityPermission by remember { mutableStateOf(true) }
     var showPermissionDialog by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
@@ -729,11 +709,9 @@ fun FlipToShhhScreen(
         {
             val dnd = withContext(Dispatchers.IO) { checkDndPermission(context) }
             val batt = withContext(Dispatchers.IO) { checkBatteryOptimization(context) }
-            val notif = withContext(Dispatchers.IO) { checkNotificationPermission(context) }
             val access = withContext(Dispatchers.IO) { FlipLockAccessibilityService.isAccessibilityServiceEnabled(context) }
             hasDndPermission = dnd
             isIgnoringBatteryOptimization = batt
-            hasNotificationPermission = notif
             hasAccessibilityPermission = access
         }
     }
@@ -767,7 +745,7 @@ fun FlipToShhhScreen(
                 }) { Text(AppStrings.get(context, "grant_btn", languageMode), style = OneUiTypography.ButtonText) }
             },
             dismissButton = {
-                TextButton(onClick = { showPermissionDialog = false }) { Text("取消", style = OneUiTypography.ButtonText) }
+                TextButton(onClick = { showPermissionDialog = false }) { Text(AppStrings.get(context, "btn_cancel", languageMode), style = OneUiTypography.ButtonText) }
             }
         )
     }
@@ -812,7 +790,56 @@ fun FlipToShhhScreen(
                             onOpenSettings = { showSettingsSheet = true }
                         )
 
-                        // 2. Interactive Hero Status Card
+                        // 2. Missing DND permission warning banner (only when DND not granted)
+                        if (!hasDndPermission) {
+                            val isDark = isSystemInDarkTheme()
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { openDndPermissionSettings(context) },
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isDark) Color(0xFF78350F).copy(alpha = 0.5f) else Color(0xFFFFFBEB)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        modifier = Modifier.weight(1f),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = AppIcons.Warning,
+                                            contentDescription = null,
+                                            tint = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706),
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = AppStrings.get(context, "perm_dnd_required_banner", languageMode),
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (isDark) Color(0xFFFDE68A) else Color(0xFF92400E)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        onClick = { openDndPermissionSettings(context) },
+                                        shape = RoundedCornerShape(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(AppStrings.get(context, "grant_btn", languageMode), style = OneUiTypography.ButtonText)
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. Interactive Hero Status Card
                         HeroServiceCard(
                             isRunning = isServiceRunning,
                             isFlippedDown = isFlippedDown,
@@ -831,23 +858,10 @@ fun FlipToShhhScreen(
                             }
                         )
 
-                        // 3. Feature Settings Card (Auto-Start & Auto-Lock Screen)
+                        // 4. Feature Settings Card (Auto-Start & Auto-Lock Screen)
                         FeatureSettingsCard(
                             languageMode = languageMode,
                             onRequestAccessibilityPermission = { openAccessibilitySettings(context) }
-                        )
-
-                        // 4. System Permissions Group Card
-                        PermissionsCard(
-                            hasDndPermission = hasDndPermission,
-                            isIgnoringBatteryOptimization = isIgnoringBatteryOptimization,
-                            hasNotificationPermission = hasNotificationPermission,
-                            hasAccessibilityPermission = hasAccessibilityPermission,
-                            languageMode = languageMode,
-                            onGrantDnd = { openDndPermissionSettings(context) },
-                            onRequestBatteryOptimization = { requestIgnoreBatteryOptimization(context) },
-                            onRequestNotificationPermission = { requestNotificationPermission(context) },
-                            onGrantAccessibility = { openAccessibilitySettings(context) }
                         )
 
                         Spacer(modifier = Modifier.height(28.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()))
@@ -857,6 +871,9 @@ fun FlipToShhhScreen(
                 // Settings sheet overlay — rendered AFTER Scaffold so it covers everything
                 SettingsBottomSheet(
                     visible = showSettingsSheet,
+                    onGrantDnd = { openDndPermissionSettings(context) },
+                    onRequestBatteryOptimization = { requestIgnoreBatteryOptimization(context) },
+                    onGrantAccessibility = { openAccessibilitySettings(context) },
                     onDismiss = {
                         showSettingsSheet = false
                         languageMode = prefs.getInt("language_mode", 0)
@@ -1168,250 +1185,55 @@ fun FeatureSettingsCard(
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// Permissions Group Card — Core vs Optional Separation
+// Permission Row Component
 // ════════════════════════════════════════════════════════════════════════
-
-data class PermissionStatusItem(
-    val id: String,
-    val titleKey: String,
-    val descKey: String,
-    val isGranted: Boolean,
-    val isOptional: Boolean,
-    val icon: ImageVector,
-    val onAction: () -> Unit
-)
-
-@Composable
-fun PermissionsCard(
-    hasDndPermission: Boolean,
-    isIgnoringBatteryOptimization: Boolean,
-    hasNotificationPermission: Boolean,
-    hasAccessibilityPermission: Boolean,
-    languageMode: Int,
-    onGrantDnd: () -> Unit,
-    onRequestBatteryOptimization: () -> Unit,
-    onRequestNotificationPermission: () -> Unit,
-    onGrantAccessibility: () -> Unit
-) {
-    val context = LocalContext.current
-    var isExpanded by remember { mutableStateOf(false) }
-
-    val coreReady = hasDndPermission
-
-    val isDark = isSystemInDarkTheme()
-    val greenColor = if (isDark) Color(0xFF34D399) else Color(0xFF059669)
-    val amberBgColor = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB)
-    val amberTextColor = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
-
-    val items = remember(hasDndPermission, isIgnoringBatteryOptimization, hasNotificationPermission, hasAccessibilityPermission, languageMode) {
-        listOf(
-            PermissionStatusItem(
-                id = "dnd",
-                titleKey = "perm_dnd_title",
-                descKey = if (hasDndPermission) "perm_dnd_granted" else "perm_dnd_required",
-                isGranted = hasDndPermission,
-                isOptional = false,
-                icon = AppIcons.NotificationsActive,
-                onAction = onGrantDnd
-            ),
-            PermissionStatusItem(
-                id = "battery",
-                titleKey = "perm_battery_title",
-                descKey = if (isIgnoringBatteryOptimization) "perm_battery_granted" else "perm_battery_desc",
-                isGranted = isIgnoringBatteryOptimization,
-                isOptional = true,
-                icon = AppIcons.BatterySaver,
-                onAction = onRequestBatteryOptimization
-            ),
-            PermissionStatusItem(
-                id = "access",
-                titleKey = "perm_access_title",
-                descKey = if (hasAccessibilityPermission) "perm_access_granted" else "perm_access_desc",
-                isGranted = hasAccessibilityPermission,
-                isOptional = true,
-                icon = AppIcons.Lock,
-                onAction = onGrantAccessibility
-            ),
-            PermissionStatusItem(
-                id = "notif",
-                titleKey = "perm_notif_optional_title",
-                descKey = if (hasNotificationPermission) "perm_notif_sub" else "perm_notif_optional_sub",
-                isGranted = hasNotificationPermission,
-                isOptional = true,
-                icon = AppIcons.Notifications,
-                onAction = onRequestNotificationPermission
-            )
-        )
-    }
-
-    if (coreReady && !isExpanded) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .clickable { isExpanded = true }
-                .padding(vertical = 12.dp, horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = AppIcons.CheckCircle,
-                contentDescription = null,
-                tint = greenColor,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = AppStrings.get(context, "perm_header_ready", languageMode),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = greenColor
-            )
-        }
-    } else {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(26.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize()
-            ) {
-                if (!coreReady) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(amberBgColor)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = AppIcons.Warning,
-                            contentDescription = null,
-                            tint = amberTextColor,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = AppStrings.get(context, "perm_dnd_required_banner", languageMode),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = amberTextColor
-                        )
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { isExpanded = false }
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = AppIcons.CheckCircle,
-                                contentDescription = null,
-                                tint = greenColor,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = AppStrings.get(context, "perm_header_ready", languageMode),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = greenColor
-                            )
-                        }
-                        Text(
-                            text = AppStrings.get(context, "perm_collapse", languageMode),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    items.forEachIndexed { index, permItem ->
-                        if (index > 0) {
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                        }
-                        PermissionItemRow(
-                            title = AppStrings.get(context, permItem.titleKey, languageMode),
-                            subtitle = AppStrings.get(context, permItem.descKey, languageMode),
-                            isGranted = permItem.isGranted,
-                            isOptional = permItem.isOptional,
-                            icon = permItem.icon,
-                            languageMode = languageMode,
-                            onAction = permItem.onAction
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun PermissionItemRow(
     title: String,
-    subtitle: String,
-    isGranted: Boolean,
-    isOptional: Boolean = false,
     icon: ImageVector,
-    languageMode: Int,
     onAction: () -> Unit
 ) {
-    val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
-    val greenColor = if (isDark) Color(0xFF34D399) else Color(0xFF059669)
-    val warningColor = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
+    val haptic = LocalHapticFeedback.current
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (isGranted) MaterialTheme.colorScheme.onSurfaceVariant else if (isOptional) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f) else warningColor,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = OneUiTypography.ItemTitle, color = MaterialTheme.colorScheme.onSurface)
-            Text(
-                text = subtitle,
-                style = OneUiTypography.ItemSubtitle,
-                color = if (isGranted) greenColor else if (isOptional) MaterialTheme.colorScheme.onSurfaceVariant else warningColor
-            )
-        }
-        if (!isGranted) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = onAction,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = if (isOptional) ButtonDefaults.filledTonalButtonColors() else ButtonDefaults.buttonColors()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
             ) {
-                Text(AppStrings.get(context, "grant_btn", languageMode), style = OneUiTypography.ButtonText)
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onAction()
             }
-        } else {
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
             Icon(
-                imageVector = AppIcons.CheckCircle,
-                contentDescription = "Granted",
-                tint = greenColor,
-                modifier = Modifier.size(20.dp)
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(14.dp))
+            Text(
+                text = title,
+                style = OneUiTypography.ItemTitle,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
+        Icon(
+            imageVector = AppIcons.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
@@ -1434,27 +1256,31 @@ private fun checkBatteryOptimization(context: Context): Boolean {
 }
 
 private fun requestIgnoreBatteryOptimization(context: Context) {
+    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    if (!pm.isIgnoringBatteryOptimizations(context.packageName)) {
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:${context.packageName}")
+            }
+            context.startActivity(intent)
+            return
+        } catch (e: Exception) {
+            // fallback
+        }
+    }
+
     try {
-        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.parse("package:${context.packageName}")
         }
         context.startActivity(intent)
     } catch (e: Exception) {
-        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+        try {
+            context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+        } catch (e2: Exception) {
+            // ignore
+        }
     }
-}
-
-private fun checkNotificationPermission(context: Context): Boolean {
-    return ContextCompat.checkSelfPermission(
-        context, Manifest.permission.POST_NOTIFICATIONS
-    ) == PackageManager.PERMISSION_GRANTED
-}
-
-private fun requestNotificationPermission(context: Context) {
-    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-    }
-    context.startActivity(intent)
 }
 
 private fun openAccessibilitySettings(context: Context) {
@@ -1462,7 +1288,7 @@ private fun openAccessibilitySettings(context: Context) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// Settings Modal Bottom Sheet & About Dialog
+// Settings Modal Bottom Sheet & Option Picker
 // ════════════════════════════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1538,388 +1364,248 @@ fun <T> OptionPickerSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsBottomSheet(
     visible: Boolean,
+    onGrantDnd: () -> Unit,
+    onRequestBatteryOptimization: () -> Unit,
+    onGrantAccessibility: () -> Unit,
     onDismiss: () -> Unit,
     onShowAbout: () -> Unit,
     onThemeModeSelected: (Int) -> Unit = {}
 ) {
+    if (!visible) return
+
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
-    val density = LocalDensity.current
-    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    var debounceMs by remember { mutableStateOf(prefs.getLong("debounce_ms", 2000L)) }
-    var hapticMode by remember { mutableStateOf(prefs.getInt("haptic_mode", 0)) }
     var themeMode by remember { mutableStateOf(prefs.getInt("theme_mode", 0)) }
     var languageMode by remember { mutableStateOf(prefs.getInt("language_mode", 0)) }
-
-    var showDebouncePicker by remember { mutableStateOf(false) }
     var showLanguagePicker by remember { mutableStateOf(false) }
 
-    // Use screen height as the "hidden" offset
-    val screenHeightPx = with(density) {
-        context.resources.configuration.screenHeightDp.dp.toPx()
-    }
-    val offsetY = remember { Animatable(screenHeightPx) }
-
-    // Animate show/hide
-    LaunchedEffect(visible) {
-        if (visible) {
-            offsetY.animateTo(0f, tween(350, easing = FastOutSlowInEasing))
-        } else {
-            offsetY.animateTo(screenHeightPx, tween(280, easing = FastOutSlowInEasing))
-        }
-    }
-
-    val progress = (1f - offsetY.value / screenHeightPx).coerceIn(0f, 1f)
-    val isShowing = progress > 0.01f
-
-    BackHandler(enabled = visible) {
-        scope.launch {
-            offsetY.animateTo(screenHeightPx, tween(280, easing = FastOutSlowInEasing))
-            onDismiss()
-        }
-    }
-
-    // Drag-to-dismiss
-    val draggableState = rememberDraggableState { delta ->
-        scope.launch {
-            offsetY.snapTo((offsetY.value + delta).coerceAtLeast(0f))
-        }
-    }
-
-    // Scrim — only rendered when visible
-    if (isShowing) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.32f * progress))
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                ) {
-                    scope.launch {
-                        offsetY.animateTo(screenHeightPx, tween(280, easing = FastOutSlowInEasing))
-                        onDismiss()
-                    }
-                }
-        )
-    }
-
-    // Sheet panel — ALWAYS in composition tree, positioned off-screen when hidden
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .offset { IntOffset(0, offsetY.value.roundToInt()) },
-        contentAlignment = Alignment.BottomCenter
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp, bottom = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                )
+            }
+        },
+        contentWindowInsets = { WindowInsets.navigationBars }
     ) {
-        Surface(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .draggable(
-                    state = draggableState,
-                    orientation = Orientation.Vertical,
-                    onDragStopped = { velocity ->
-                        if (offsetY.value > screenHeightPx * 0.25f || velocity > 800f) {
-                            offsetY.animateTo(screenHeightPx, tween(280, easing = FastOutSlowInEasing))
-                            onDismiss()
-                        } else {
-                            offsetY.animateTo(0f, tween(200, easing = FastOutSlowInEasing))
-                        }
-                    }
-                ),
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 8.dp
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp)
         ) {
+            // Header Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp, start = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = AppStrings.get(context, "settings_title", languageMode),
+                    style = OneUiTypography.TitleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 20.dp)
-                    .padding(top = 0.dp, bottom = 46.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // MD3 Drag Handle
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 6.dp, bottom = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(32.dp)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-                    )
-                }
-
-                // Header Bar
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = AppStrings.get(context, "settings_title", languageMode),
-                        style = OneUiTypography.TitleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    // Group 1: Response (响应)
-                    Column {
-                        SectionHeader(text = AppStrings.get(context, "group_response", languageMode))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(22.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // 1. Haptic Feedback (Segmented)
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(
-                                        text = AppStrings.get(context, "haptic_title", languageMode),
-                                        style = OneUiTypography.ItemTitle,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    val hapticItems = remember(languageMode) {
-                                        listOf(
-                                            0 to AppStrings.get(context, "haptic_double", languageMode),
-                                            1 to AppStrings.get(context, "haptic_single", languageMode),
-                                            2 to AppStrings.get(context, "haptic_off", languageMode)
-                                        )
-                                    }
-                                    SegmentedControlBar(
-                                        items = hapticItems,
-                                        selectedKey = hapticMode,
-                                        onSelect = { mode ->
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            hapticMode = mode
-                                            prefs.edit().putInt("haptic_mode", mode).apply()
-                                            playHapticPreview(context, mode)
-                                        }
-                                    )
-                                }
-
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-                                // 2. Debounce Time Row
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = null
-                                        ) { showDebouncePicker = true }
-                                        .padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = AppStrings.get(context, "debounce_title", languageMode),
-                                        style = OneUiTypography.ItemTitle,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        val debounceSecStr = when (debounceMs) {
-                                            1000L -> "1"
-                                            3000L -> "3"
-                                            else -> "2"
-                                        }
-                                        val currentDebounceLabel = if (languageMode == 3) "${debounceSecStr}s" else "${debounceSecStr} 秒"
-                                        Text(
-                                            text = currentDebounceLabel,
-                                            style = OneUiTypography.ItemSubtitle,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Icon(
-                                            imageVector = AppIcons.ChevronRight,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Group 2: Appearance (外观)
-                    Column {
-                        SectionHeader(text = AppStrings.get(context, "group_appearance", languageMode))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(22.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // 1. Theme Mode (Segmented)
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(
-                                        text = AppStrings.get(context, "theme_title", languageMode),
-                                        style = OneUiTypography.ItemTitle,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    val themeItems = remember(languageMode) {
-                                        listOf(
-                                            0 to AppStrings.get(context, "sys_default", languageMode),
-                                            1 to AppStrings.get(context, "theme_dark", languageMode),
-                                            2 to AppStrings.get(context, "theme_light", languageMode)
-                                        )
-                                    }
-                                    SegmentedControlBar(
-                                        items = themeItems,
-                                        selectedKey = themeMode,
-                                        onSelect = { mode ->
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            themeMode = mode
-                                            prefs.edit().putInt("theme_mode", mode).apply()
-                                            onThemeModeSelected(mode)
-                                        }
-                                    )
-                                }
-
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-                                // 2. Language Picker Row
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = null
-                                        ) { showLanguagePicker = true }
-                                        .padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = AppStrings.get(context, "lang_title", languageMode),
-                                        style = OneUiTypography.ItemTitle,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        val currentLangLabel = when (languageMode) {
-                                            1 -> AppStrings.get(context, "lang_sim_cn", languageMode)
-                                            2 -> AppStrings.get(context, "lang_trad_cn", languageMode)
-                                            3 -> AppStrings.get(context, "lang_english", languageMode)
-                                            else -> AppStrings.get(context, "sys_default", languageMode)
-                                        }
-                                        Text(
-                                            text = currentLangLabel,
-                                            style = OneUiTypography.ItemSubtitle,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Icon(
-                                            imageVector = AppIcons.ChevronRight,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Group 3: About (关于)
-                    Column {
-                        SectionHeader(text = AppStrings.get(context, "group_about", languageMode))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Card(
+                // Group 1: Core Permissions (核心权限)
+                Column {
+                    SectionHeader(text = AppStrings.get(context, "group_permissions", languageMode))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                    ) {
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onShowAbout()
-                                },
-                            shape = RoundedCornerShape(22.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
+                            PermissionItemRow(
+                                title = AppStrings.get(context, "perm_dnd_title", languageMode),
+                                icon = AppIcons.NotificationsActive,
+                                onAction = onGrantDnd
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            PermissionItemRow(
+                                title = AppStrings.get(context, "perm_battery_title", languageMode),
+                                icon = AppIcons.BatterySaver,
+                                onAction = onRequestBatteryOptimization
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            PermissionItemRow(
+                                title = AppStrings.get(context, "perm_access_title", languageMode),
+                                icon = AppIcons.Lock,
+                                onAction = onGrantAccessibility
+                            )
+                        }
+                    }
+                }
+
+                // Group 2: Appearance & Language (外观与语言)
+                Column {
+                    SectionHeader(text = AppStrings.get(context, "group_appearance", languageMode))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // 1. Theme Mode (Segmented)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = AppStrings.get(context, "theme_title", languageMode),
+                                    style = OneUiTypography.ItemTitle,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                val themeItems = remember(languageMode) {
+                                    listOf(
+                                        0 to AppStrings.get(context, "sys_default", languageMode),
+                                        1 to AppStrings.get(context, "theme_dark", languageMode),
+                                        2 to AppStrings.get(context, "theme_light", languageMode)
+                                    )
+                                }
+                                SegmentedControlBar(
+                                    items = themeItems,
+                                    selectedKey = themeMode,
+                                    onSelect = { mode ->
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        themeMode = mode
+                                        prefs.edit().putInt("theme_mode", mode).apply()
+                                        onThemeModeSelected(mode)
+                                    }
+                                )
+                            }
+
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                            // 2. Language Picker Row
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(18.dp),
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { showLanguagePicker = true }
+                                    .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
+                                Text(
+                                    text = AppStrings.get(context, "lang_title", languageMode),
+                                    style = OneUiTypography.ItemTitle,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                                 Row(verticalAlignment = Alignment.CenterVertically) {
+                                    val currentLangLabel = when (languageMode) {
+                                        1 -> AppStrings.get(context, "lang_sim_cn", languageMode)
+                                        2 -> AppStrings.get(context, "lang_trad_cn", languageMode)
+                                        3 -> AppStrings.get(context, "lang_english", languageMode)
+                                        else -> AppStrings.get(context, "sys_default", languageMode)
+                                    }
+                                    Text(
+                                        text = currentLangLabel,
+                                        style = OneUiTypography.ItemSubtitle,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Icon(
-                                        imageVector = AppIcons.Info,
+                                        imageVector = AppIcons.ChevronRight,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(14.dp))
-                                    Text(
-                                        text = AppStrings.get(context, "about_app_title", languageMode),
-                                        style = OneUiTypography.ItemTitle,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
+                            }
+                        }
+                    }
+                }
+
+                // Group 3: About (关于)
+                Column {
+                    SectionHeader(text = AppStrings.get(context, "group_about", languageMode))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onShowAbout()
+                            },
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = AppIcons.ChevronRight,
-                                    contentDescription = "查看详情",
+                                    imageVector = AppIcons.Info,
+                                    contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(modifier = Modifier.width(14.dp))
+                                Text(
+                                    text = AppStrings.get(context, "about_app_title", languageMode),
+                                    style = OneUiTypography.ItemTitle,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
+                            Icon(
+                                imageVector = AppIcons.ChevronRight,
+                                contentDescription = "查看详情",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
             }
         }
-    }
-
-    if (showDebouncePicker) {
-        val debounceOptions = remember(languageMode) {
-            val isEng = (languageMode == 3)
-            val isTrad = (languageMode == 2)
-            listOf(
-                1000L to (if (isEng) "1s" else if (isTrad) "1 秒" else "1 秒"),
-                2000L to (if (isEng) "2s" else if (isTrad) "2 秒" else "2 秒"),
-                3000L to (if (isEng) "3s" else if (isTrad) "3 秒" else "3 秒")
-            )
-        }
-        OptionPickerSheet(
-            title = AppStrings.get(context, "debounce_title", languageMode),
-            options = debounceOptions,
-            selectedKey = debounceMs,
-            onSelect = { ms ->
-                debounceMs = ms
-                prefs.edit().putLong("debounce_ms", ms).apply()
-            },
-            onDismiss = { showDebouncePicker = false }
-        )
     }
 
     if (showLanguagePicker) {

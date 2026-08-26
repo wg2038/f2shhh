@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">🤫 Flip to Shhh</h1>
   <p align="center">
-    <strong>傾心專為 Samsung Galaxy 系列打造，兼具全 Android（13+）品牌裝置高精度相容的翻轉勿擾工具</strong>
+    <strong>為非 Pixel 等 Android（13+）全品牌裝置提供的低功耗 Pixel 級翻轉靜音/勿擾工具</strong>
   </p>
   <p align="center">
     <a href="README.md">English</a> •
@@ -11,10 +11,10 @@
   <p align="center">
     <a href="https://github.com/wg2038/f2shhh/releases/latest"><img src="https://img.shields.io/github/v/release/wg2038/f2shhh?style=flat-square&color=blue" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
-    <img src="https://img.shields.io/badge/Tailored_For-Samsung_Galaxy_/_One_UI-0057FF?style=flat-square" alt="Samsung Galaxy">
+    <img src="https://img.shields.io/badge/Designed_For-Non--Pixel_Android_13%2B-0057FF?style=flat-square" alt="Android 13+">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
     <img src="https://img.shields.io/badge/APK_Size-~2.2_MB-success?style=flat-square" alt="Size">
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License"></a>
   </p>
 </p>
 
@@ -38,29 +38,27 @@
 
 ## 📖 專案簡介
 
-**Flip to Shhh** 是一款無廣告、超低功耗的常駐翻轉靜音工具。本軟體**立項初衷與核心優化傾心專為 Samsung Galaxy 系列手機（One UI）深度客製**，提供媲美原生的 One UI 雙脈衝觸感震動與功耗調優；同時具備極佳的通用性，**全面相容其他所有 Android 13+ 品牌手機**。
+**Flip to Shhh** 是一款無廣告、超低功耗的常駐翻轉靜音工具。為廣大**非 Pixel 的 Android 13+ 手機**（Samsung One UI、小米 HyperOS、OPPO ColorOS、vivo OriginOS、OnePlus OxygenOS 等）帶來原生級 Flip-to-Shhh 翻轉勿擾體驗。
 
-只需將手機螢幕朝下放置在桌面上，即可瞬時開啟勿擾模式（DND）並自動熄屏鎖屏。
+只需將手機螢幕朝下平放在桌面上保持 2 秒，即可伴隨清脆的雙脈衝觸感震動（「咚 - 咚」）自動開啟勿擾模式（DND）並聯動熄屏鎖屏。
 
 ---
 
 ## ⚡ 核心技術架構與亮點
 
-### 1. 專為三星客製，全品牌通用相容
-軟體設計初衷旨在補全三星 Galaxy One UI 缺少的「翻轉靜音（Flip-to-Shhh）」原生手勢，針對三星硬體架構進行了深度契合與觸感調優；同時採用了通用的 Android 標準架構，完美相容小米、OPPO、vivo、榮耀、Pixel 等所有 Android 13+ 裝置。
+### 1. Pixel 級精準手勢演算法
+參考 Google Pixel 原生 Flip to Shhh 判定機制深度重構：
+- **嚴格平放傾角約束**：垂直重力與空間水平傾角嚴格限制在 $\le 15^\circ$ 以內（$Z \le -9.3\text{ m/s}^2$、水平加速度分量 $\sqrt{X^2+Y^2} \le 2.0\text{ m/s}^2$），徹底杜絕手機斜靠、插袋或車架傾斜時誤觸發。
+- **近距離感測器智慧融合**：動態校驗螢幕是否正對物理表面（`TYPE_PROXIMITY`），並在不同硬體方案間無縫優雅降級。
+- **2 秒連續靜止時間窗口**：扣下後需在桌面保持 2 秒平穩靜止方可觸發，手持晃動或未平放直接重置計時。
 
-### 2. 純重力向量演算法（不依賴光線/近距離感測器）
-不同於傳統靜音應用依賴屏下光線/近距離感測器持續輪詢（會導致三星屏下光線感測器發熱與阻斷 CPU 深度休眠），**Flip to Shhh** 完全基於 `TYPE_GRAVITY`（重力向量）與 `TYPE_GYROSCOPE`（陀螺儀）融合演算法，保證裝置進入 Deep Sleep 深度休眠。
+### 2. 標準化雙脈衝觸感反饋
+預設採用系統級觸覺引擎的雙脈衝質感震動（「咚 - 咚」，基於 `PRIMITIVE_THUD`），翻轉朝上時輔以輕柔微觸（`PRIMITIVE_CLICK`），提供極致沉浸與明確的操作反饋。
 
 ### 3. 硬體 FIFO 批量上報（50ms 延遲）
 透過 `BATCH_LATENCY_US = 50_000` 訂閱 Sensor Hub 硬體 FIFO 隊列。感測器資料由低功耗 DSP 協處理器在 50ms 週期內批量處理，極大降低 CPU 喚醒頻率，實現近乎為零的後台功耗。
 
-### 4. 雙閾值遲滯（Hysteresis）與物理靜止校驗
-為防止手持走路、口袋晃動或桌面微顫引發誤觸發：
-- **進入條件**：垂直重力 $Z \le -9.0\text{ m/s}^2$、水平傾角分量 $\sqrt{X^2+Y^2} \le 1.8\text{ m/s}^2$（傾角最大約 23°）、加速度變化率 $\Delta G \le 0.15\text{ m/s}^2$、陀螺儀角速度 $\omega \le 0.08\text{ rad/s}$。
-- **退出條件**：$Z > -7.0\text{ m/s}^2$ 或水平分量 $> 2.8\text{ m/s}^2$。
-
-### 5. 無損鎖屏與 DND 智慧歸屬追蹤
+### 4. 無損鎖屏與 DND 智慧歸屬追蹤
 - **完美保留生物識別解鎖**：基於 Android 原生無障礙服務（`GLOBAL_ACTION_LOCK_SCREEN`），鎖屏後仍可順暢使用指紋與人臉解鎖（避免了傳統 DeviceAdmin API 導致必須輸入 PIN/密碼的缺陷）。
 - **DND 智慧歸屬追蹤**：自動相容系統定時勿擾（如 23:00–07:00）。若扣下手機前系統已被定時器開啟勿擾，翻轉朝上時**絕不會誤將系統勿擾關閉或反向誤拉起**，完全尊重系統自身的生命周期。
 
@@ -97,4 +95,4 @@ cd f2shhh
 
 ## 📄 開源許可
 
-本專案基於 [Apache License 2.0](LICENSE) 開源協議發布。
+本專案基於 [MIT License](LICENSE) 開源協議發布。

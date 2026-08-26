@@ -11,8 +11,6 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.hardware.TriggerEvent
-import android.hardware.TriggerEventListener
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.os.Build
@@ -28,20 +26,17 @@ import androidx.lifecycle.LifecycleService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.math.sqrt
 
 /**
- * Flip to Shhh Service — optimized for Samsung Galaxy flagship devices (Android 13+).
+ * Flip to Shhh Service — Pixel-grade precision flip-to-mute utility for Android 13+.
  *
- * Sensor strategy:
- *  - TYPE_SIGNIFICANT_MOTION (hardware trigger, ultra-low power) as the always-on listener.
- *  - TYPE_GRAVITY (virtual sensor, fused from accel+gyro) for short confirmation bursts (~1.5s).
- *  - No light sensor dependency — Samsung flagships use under-display light sensors not designed
- *    for continuous polling, and the gravity vector alone reliably detects face-down orientation.
- *
- * DND management:
- *  - Saves both previous ringer mode AND previous interruption filter.
- *  - Restores to the user's original state on flip-back or service shutdown.
- *  - State persisted to SharedPreferences to survive service kills.
+ * Algorithm highlights:
+ *  - Strict flatness & gravity vector analysis: ensures device is resting flat on a surface (tilt <= 15°).
+ *  - Proximity sensor fusion: verifies screen is facing a physical surface (desk/table), preventing false triggers in mid-air or slanted mounts.
+ *  - Continuous 2.0s stillness window: guarantees the phone remains stationary on the surface before triggering DND.
+ *  - Dual-pulse haptic feedback on flip-down ("咚 - 咚"), subtle click on flip-up.
+ *  - Smart DND ownership tracking: never overwrites or clears external system-scheduled DND rules.
  */
 class FlipToShhhService : LifecycleService(), SensorEventListener {
 
@@ -55,7 +50,9 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     private var gravitySensor: Sensor? = null
     private var accelerometerSensor: Sensor? = null
     private var gyroscopeSensor: Sensor? = null
-    private var activeSensor: Sensor? = null
+    private var proximitySensor: Sensor? = null
+    private var activeOrientationSensor: Sensor? = null
+    private var hasOpticalProximity: Boolean = false
 
     private var currentXValue: Float = 0f
     private var currentYValue: Float = 0f
@@ -66,6 +63,8 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     private var prevZValue: Float = 0f
     private var currentDeltaG: Float = 0f
     private var currentGyroRotation: Float = 0f
+    private var isProximityNear: Boolean = false
+
     private var faceDownStartTime: Long = 0L
 
     private var previousRingerMode: Int = AudioManager.RINGER_MODE_NORMAL
@@ -77,36 +76,40 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     private val debounceRunnable: Runnable = Runnable {
         val currentlyFlipped = _isFlippedDown.value
-        val hMag = kotlin.math.sqrt(currentXValue * currentXValue + currentYValue * currentYValue)
-        val isPhysicallyStationary = (currentDeltaG <= MAX_DELTA_G_STILLNESS) && (currentGyroRotation <= MAX_GYRO_ROTATION_STILLNESS)
-        val isFlatFaceDown = (currentZValue <= FACE_DOWN_ENTER_Z_THRESHOLD) && (hMag <= MAX_HORIZONTAL_GRAVITY) && isPhysicallyStationary
-        val isFaceUpOrTilted = (currentZValue > FACE_DOWN_EXIT_Z_THRESHOLD) || (hMag > MAX_HORIZONTAL_GRAVITY + 1.0f)
+        val hMag = sqrt(currentXValue * currentXValue + currentYValue * currentYValue)
+        val isPhysicallyStationary = (currentDeltaG <= MAX_DELTA_G_FINAL_CHECK) && (currentGyroRotation <= MAX_GYRO_FINAL_CHECK)
+        val isStrictlyFlatFaceDown = (currentZValue <= FACE_DOWN_ENTER_Z_THRESHOLD) &&
+                (hMag <= MAX_HORIZONTAL_GRAVITY) &&
+                (!hasOpticalProximity || isProximityNear)
 
         if (pendingTargetState == TargetFlipState.DOWN && !currentlyFlipped) {
             val now = SystemClock.elapsedRealtime()
-            val totalDebounceMs = getDebounceMs()
             val elapsedTime = now - faceDownStartTime
-            val remainingMs = totalDebounceMs - elapsedTime
+            val remainingMs = FIXED_DEBOUNCE_DOWN_MS - elapsedTime
 
             if (remainingMs > 30L) {
-                if (currentZValue <= FACE_DOWN_ENTER_Z_THRESHOLD && hMag <= MAX_HORIZONTAL_GRAVITY) {
+                if (isStrictlyFlatFaceDown) {
                     handler.postDelayed(debounceRunnable, remainingMs)
                     return@Runnable
                 } else {
+                    Log.i(TAG, "Cancelling debounce countdown: phone tilted or moved (Z=$currentZValue, H=$hMag)")
                     pendingTargetState = TargetFlipState.NONE
                     return@Runnable
                 }
             }
 
-            if (isFlatFaceDown) {
-                Log.i(TAG, "Debounce confirmed (${elapsedTime}ms elapsed since T0) -> entering Face Down mode (DND ON), Z=$currentZValue, H=$hMag, dG=$currentDeltaG, gyro=$currentGyroRotation")
+            if (isStrictlyFlatFaceDown && isPhysicallyStationary) {
+                Log.i(TAG, "Debounce confirmed (2000ms elapsed): entering Face Down mode (DND ON), Z=$currentZValue, H=$hMag, optProx=$hasOpticalProximity")
                 _isFlippedDown.value = true
                 enableDoNotDisturb()
             } else {
-                Log.i(TAG, "Debounce expired but phone is not fully stationary (dG=$currentDeltaG, gyro=$currentGyroRotation) -> skipping DND trigger")
+                Log.i(TAG, "Debounce finished but phone not stationary/flat (Z=$currentZValue, H=$hMag, dG=$currentDeltaG, gyro=$currentGyroRotation) -> skip DND")
             }
         } else if (pendingTargetState == TargetFlipState.UP && currentlyFlipped) {
-            if (isFaceUpOrTilted) {
+            val isExitCondition = (currentZValue > FACE_DOWN_EXIT_Z_THRESHOLD) ||
+                    (hMag > EXIT_HORIZONTAL_GRAVITY) ||
+                    (hasOpticalProximity && !isProximityNear)
+            if (isExitCondition) {
                 Log.i(TAG, "Debounce confirmed -> exiting Face Down mode (DND OFF), Z=$currentZValue, H=$hMag")
                 _isFlippedDown.value = false
                 disableDoNotDisturb()
@@ -135,9 +138,12 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-        activeSensor = gravitySensor ?: accelerometerSensor
+        proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY)
+        activeOrientationSensor = gravitySensor ?: accelerometerSensor
 
-        Log.i(TAG, "Active orientation sensor: ${activeSensor?.name} (type ${activeSensor?.type}), Gyro: ${gyroscopeSensor?.name}")
+        hasOpticalProximity = isHardwareOpticalProximity(proximitySensor)
+
+        Log.i(TAG, "Active orientation: ${activeOrientationSensor?.name}, Gyro: ${gyroscopeSensor?.name}, Proximity: ${proximitySensor?.name} (Optical: $hasOpticalProximity)")
 
         // Restore persisted state if service was killed and restarted.
         if (prefs.getBoolean(KEY_DND_ACTIVE, false)) {
@@ -153,14 +159,22 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         createNotificationChannel()
     }
 
+    private fun isHardwareOpticalProximity(sensor: Sensor?): Boolean {
+        sensor ?: return false
+        val name = sensor.name.lowercase()
+        val vendor = sensor.vendor.lowercase()
+        val isVirtual = name.contains("palm") || name.contains("touch") || name.contains("virtual") ||
+                name.contains("ultrasound") || name.contains("elliptic") || name.contains("ear") ||
+                name.contains("gesture") || vendor.contains("elliptic") || vendor.contains("samsung")
+        return !isVirtual
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.i(TAG, "onStartCommand")
         startForeground(NOTIFICATION_ID, createForegroundNotification())
 
-        if (!_isRunning.value) {
-            registerBatchedSensor()
-        }
+        registerSensors()
         _isRunning.value = true
         return START_STICKY
     }
@@ -177,35 +191,41 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         super.onDestroy()
     }
 
-    // ── Hardware FIFO Batched Sensor Listener ──────────────────────────────
+    // ── Sensor Listeners ───────────────────────────────────────────────────
 
-    private fun registerBatchedSensor() {
-        activeSensor?.let { sensor ->
+    private fun registerSensors() {
+        activeOrientationSensor?.let { sensor ->
             val registered = sensorManager.registerListener(
                 this,
                 sensor,
-                SensorManager.SENSOR_DELAY_UI,
-                BATCH_LATENCY_US
+                SensorManager.SENSOR_DELAY_UI
             )
-            Log.i(TAG, "Registered batched sensor listener: ${sensor.name}, success=$registered, batchLatency=${BATCH_LATENCY_US}us")
-        } ?: run {
-            Log.e(TAG, "Neither GRAVITY nor ACCELEROMETER sensor is available!")
+            Log.i(TAG, "Registered orientation sensor ${sensor.name}, success=$registered")
         }
 
         gyroscopeSensor?.let { gyro ->
             val registered = sensorManager.registerListener(
                 this,
                 gyro,
-                SensorManager.SENSOR_DELAY_UI,
-                BATCH_LATENCY_US
+                SensorManager.SENSOR_DELAY_UI
             )
-            Log.i(TAG, "Registered batched gyroscope listener: ${gyro.name}, success=$registered")
+            Log.i(TAG, "Registered gyroscope sensor ${gyro.name}, success=$registered")
+        }
+
+        proximitySensor?.let { prox ->
+            val registered = sensorManager.registerListener(
+                this,
+                prox,
+                SensorManager.SENSOR_DELAY_NORMAL
+            )
+            Log.i(TAG, "Registered proximity sensor ${prox.name}, success=$registered")
         }
     }
 
     private fun unregisterAllSensors() {
-        activeSensor?.let { sensorManager.unregisterListener(this, it) }
+        activeOrientationSensor?.let { sensorManager.unregisterListener(this, it) }
         gyroscopeSensor?.let { sensorManager.unregisterListener(this, it) }
+        proximitySensor?.let { sensorManager.unregisterListener(this, it) }
         handler.removeCallbacksAndMessages(null)
     }
 
@@ -214,15 +234,33 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         event ?: return
 
-        if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            val gx = event.values[0]
-            val gy = event.values[1]
-            val gz = event.values[2]
-            currentGyroRotation = kotlin.math.sqrt(gx * gx + gy * gy + gz * gz)
-            return
+        when (event.sensor.type) {
+            Sensor.TYPE_PROXIMITY -> {
+                val distance = event.values[0]
+                val maxRange = proximitySensor?.maximumRange?.takeIf { it > 0f } ?: 5.0f
+                isProximityNear = (distance == 0f || (distance < maxRange && distance <= 4.0f))
+                Log.d(TAG, "Proximity updated: distance=$distance, near=$isProximityNear")
+                checkFlipState()
+                return
+            }
+            Sensor.TYPE_GYROSCOPE -> {
+                val gx = event.values[0]
+                val gy = event.values[1]
+                val gz = event.values[2]
+                currentGyroRotation = sqrt(gx * gx + gy * gy + gz * gz)
+
+                // High-precision hand tremor filter for devices without optical proximity (e.g. Samsung):
+                // If counting down in mid-air, physiological hand tremor (> 0.05 rad/s) instantly resets timer!
+                if (pendingTargetState == TargetFlipState.DOWN && (!hasOpticalProximity || !isProximityNear)) {
+                    if (currentGyroRotation > MAX_GYRO_TABLE_STILLNESS) {
+                        faceDownStartTime = SystemClock.elapsedRealtime()
+                    }
+                }
+                return
+            }
         }
 
-        val targetType = activeSensor?.type ?: return
+        val targetType = activeOrientationSensor?.type ?: return
         if (event.sensor.type != targetType) return
 
         val newX = event.values[0]
@@ -232,7 +270,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         val dx = newX - prevXValue
         val dy = newY - prevYValue
         val dz = newZ - prevZValue
-        currentDeltaG = kotlin.math.sqrt(dx * dx + dy * dy + dz * dz)
+        currentDeltaG = sqrt(dx * dx + dy * dy + dz * dz)
 
         prevXValue = newX
         prevYValue = newY
@@ -241,45 +279,70 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         currentXValue = newX
         currentYValue = newY
         currentZValue = newZ
+
+        // Hand tremor micro-acceleration filter:
+        if (pendingTargetState == TargetFlipState.DOWN && (!hasOpticalProximity || !isProximityNear)) {
+            if (currentDeltaG > MAX_DELTA_G_TABLE_STILLNESS) {
+                faceDownStartTime = SystemClock.elapsedRealtime()
+            }
+        }
+
         checkFlipState()
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    // ── Flip Detection Logic ───────────────────────────────────────────────
-
-    private fun getDebounceMs(): Long {
-        return prefs.getLong(KEY_DEBOUNCE_MS, DEFAULT_DEBOUNCE_MS)
-    }
+    // ── Pixel-Style Flip Detection Logic ───────────────────────────────────
 
     private fun checkFlipState() {
-        val hMag = kotlin.math.sqrt(currentXValue * currentXValue + currentYValue * currentYValue)
-        val isOrientationFaceDown = (currentZValue <= FACE_DOWN_ENTER_Z_THRESHOLD) && (hMag <= MAX_HORIZONTAL_GRAVITY)
-        val isFaceUpOrTilted = (currentZValue > FACE_DOWN_EXIT_Z_THRESHOLD) || (hMag > MAX_HORIZONTAL_GRAVITY + 1.0f)
-        val currentlyFlipped = _isFlippedDown.value
-        val debounceDownMs = getDebounceMs()
-        val debounceUpMs = DEBOUNCE_UP_MS
+        val hMag = sqrt(currentXValue * currentXValue + currentYValue * currentYValue)
 
-        if (!currentlyFlipped && isOrientationFaceDown) {
-            if (pendingTargetState != TargetFlipState.DOWN) {
-                handler.removeCallbacks(debounceRunnable)
-                pendingTargetState = TargetFlipState.DOWN
-                faceDownStartTime = SystemClock.elapsedRealtime()
-                handler.postDelayed(debounceRunnable, debounceDownMs)
-                Log.i(TAG, "Scheduled DOWN debounce timer (${debounceDownMs}ms from T0), Z=$currentZValue, H=$hMag")
+        // Strict Pixel-grade face-down flatness check:
+        // 1. Z <= -9.0 m/s^2 (screen pointing down, normal gravity is ~9.8 m/s^2)
+        // 2. Horizontal component sqrt(X^2+Y^2) <= 2.5 m/s^2 (tilt angle <= 15° - 20°)
+        // 3. If optical proximity sensor exists, require it to be NEAR
+        val isStrictlyFlatFaceDown = (currentZValue <= FACE_DOWN_ENTER_Z_THRESHOLD) &&
+                (hMag <= MAX_HORIZONTAL_GRAVITY) &&
+                (!hasOpticalProximity || isProximityNear)
+
+        // Exit condition: picked up, tilted beyond threshold, or screen face up
+        val isExitCondition = (currentZValue > FACE_DOWN_EXIT_Z_THRESHOLD) ||
+                (hMag > EXIT_HORIZONTAL_GRAVITY) ||
+                (hasOpticalProximity && !isProximityNear)
+
+        val currentlyFlipped = _isFlippedDown.value
+
+        if (!currentlyFlipped) {
+            if (isStrictlyFlatFaceDown) {
+                if (pendingTargetState != TargetFlipState.DOWN) {
+                    handler.removeCallbacks(debounceRunnable)
+                    pendingTargetState = TargetFlipState.DOWN
+                    faceDownStartTime = SystemClock.elapsedRealtime()
+                    handler.postDelayed(debounceRunnable, FIXED_DEBOUNCE_DOWN_MS)
+                    Log.i(TAG, "Scheduled DOWN debounce timer (${FIXED_DEBOUNCE_DOWN_MS}ms from T0), Z=$currentZValue, H=$hMag")
+                }
+            } else {
+                // Instantly cancel countdown if phone departs from strictly flat face down
+                if (pendingTargetState == TargetFlipState.DOWN) {
+                    handler.removeCallbacks(debounceRunnable)
+                    pendingTargetState = TargetFlipState.NONE
+                    Log.i(TAG, "Cancelled pending DOWN debounce timer (phone tilted or moved), Z=$currentZValue, H=$hMag")
+                }
             }
-        } else if (currentlyFlipped && isFaceUpOrTilted) {
-            if (pendingTargetState != TargetFlipState.UP) {
-                handler.removeCallbacks(debounceRunnable)
-                pendingTargetState = TargetFlipState.UP
-                handler.postDelayed(debounceRunnable, debounceUpMs)
-                Log.i(TAG, "Scheduled UP debounce timer (${debounceUpMs}ms restore), Z=$currentZValue, H=$hMag")
-            }
-        } else if (!currentlyFlipped && isFaceUpOrTilted) {
-            if (pendingTargetState == TargetFlipState.DOWN) {
-                handler.removeCallbacks(debounceRunnable)
-                pendingTargetState = TargetFlipState.NONE
-                Log.i(TAG, "Cancelled pending DOWN debounce timer (phone turned face up or tilted), Z=$currentZValue, H=$hMag")
+        } else {
+            if (isExitCondition) {
+                if (pendingTargetState != TargetFlipState.UP) {
+                    handler.removeCallbacks(debounceRunnable)
+                    pendingTargetState = TargetFlipState.UP
+                    handler.postDelayed(debounceRunnable, DEBOUNCE_UP_MS)
+                    Log.i(TAG, "Scheduled UP debounce timer (${DEBOUNCE_UP_MS}ms restore), Z=$currentZValue, H=$hMag")
+                }
+            } else if (isStrictlyFlatFaceDown) {
+                if (pendingTargetState == TargetFlipState.UP) {
+                    handler.removeCallbacks(debounceRunnable)
+                    pendingTargetState = TargetFlipState.NONE
+                    Log.i(TAG, "Cancelled pending UP debounce timer (phone returned flat), Z=$currentZValue, H=$hMag")
+                }
             }
         }
     }
@@ -313,11 +376,10 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             persistState(active = true)
             _isDndActive.value = true
             updateNotification(active = true)
-            
+
             // 3. Perform lock screen after haptic has been executed
             val autoLockPref = prefs.getBoolean(KEY_AUTO_LOCK_SCREEN, true)
             val accessibilityEnabled = FlipLockAccessibilityService.isAccessibilityServiceEnabled(this)
-            Log.i(TAG, "DND mode setup complete! autoLockPref=$autoLockPref, accessibilityEnabled=$accessibilityEnabled")
 
             if (autoLockPref && accessibilityEnabled) {
                 val locked = FlipLockAccessibilityService.performLock()
@@ -334,7 +396,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             return
         }
         try {
-            // Only restore if we were the ones who changed it.
             if (!_isDndActive.value) return
 
             if (wasDndActivatedByService) {
@@ -378,63 +439,41 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             .apply()
     }
 
-    // ── Haptics ────────────────────────────────────────────────────────────
+    // ── Fixed Default Dual-Pulse Haptic ─────────────────────────────────────
 
     private fun triggerFlipDownHaptic() {
         val vib = vibrator ?: return
         if (!vib.hasVibrator()) return
-        val hapticMode = prefs.getInt(KEY_HAPTIC_MODE, 0)
         val audioAttrs = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
             .build()
 
-        when (hapticMode) {
-            0 -> { // Double pulse: Solid & Distinct "咚 - 咚"
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-                    vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_THUD)
-                ) {
-                    val composition = VibrationEffect.startComposition()
-                        .addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, 1.0f)
-                        .addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, 1.0f, 65)
-                        .compose()
-                    vib.vibrate(composition, audioAttrs)
-                } else {
-                    val timings = longArrayOf(0, 28, 65, 40)
-                    val amplitudes = intArrayOf(0, 255, 0, 255)
-                    vib.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1), audioAttrs)
-                }
-            }
-            1 -> { // Single touch: Solid "咚"
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-                    vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_THUD)
-                ) {
-                    val composition = VibrationEffect.startComposition()
-                        .addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, 1.0f)
-                        .compose()
-                    vib.vibrate(composition, audioAttrs)
-                } else {
-                    val timings = longArrayOf(0, 35)
-                    val amplitudes = intArrayOf(0, 255)
-                    vib.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1), audioAttrs)
-                }
-            }
-            2 -> { // Off
-                // Silent/no haptic
-            }
+        // Double pulse: Solid & Distinct "咚 - 咚"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+            vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_THUD)
+        ) {
+            val composition = VibrationEffect.startComposition()
+                .addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, 1.0f)
+                .addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, 1.0f, 65)
+                .compose()
+            vib.vibrate(composition, audioAttrs)
+        } else {
+            val timings = longArrayOf(0, 28, 65, 40)
+            val amplitudes = intArrayOf(0, 255, 0, 255)
+            vib.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1), audioAttrs)
         }
     }
 
     private fun triggerFlipUpHaptic() {
         val vib = vibrator ?: return
         if (!vib.hasVibrator()) return
-        val hapticMode = prefs.getInt(KEY_HAPTIC_MODE, 0)
-        if (hapticMode == 2) return
         val audioAttrs = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
             .build()
 
+        // Subtle single click feedback on flip-up
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
             vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_CLICK)
         ) {
@@ -457,7 +496,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             "Flip to Shhh 服务",
             NotificationManager.IMPORTANCE_MIN
         ).apply {
-            description = "三星 Flip to Shhh 翻转静音服务"
+            description = "Flip to Shhh 翻转静音服务"
             setShowBadge(false)
         }
         notifManager.createNotificationChannel(channel)
@@ -475,10 +514,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-
-        val langMode = prefs.getInt("language_mode", 0)
-        val isEng = (langMode == 3)
-        val isTrad = (langMode == 2)
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_shhh)
@@ -512,28 +547,31 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         private const val KEY_PREV_RINGER_MODE = "prev_ringer_mode"
         private const val KEY_PREV_INTERRUPTION_FILTER = "prev_interruption_filter"
         private const val KEY_WAS_DND_ACTIVATED_BY_SERVICE = "was_dnd_activated_by_service"
-
-        const val KEY_DEBOUNCE_MS = "debounce_ms"
-        const val DEFAULT_DEBOUNCE_MS = 2000L
-        const val DEBOUNCE_UP_MS = 1000L
-        const val KEY_HAPTIC_MODE = "haptic_mode" // 0: double pulse, 1: single touch, 2: off
         const val KEY_AUTO_LOCK_SCREEN = "auto_lock_screen"
 
-        // Gravity/Accelerometer vector: Z ≈ -9.8 when face-down flat.
+        // Fixed 2.0-second debounce wait time for flip-down
+        const val FIXED_DEBOUNCE_DOWN_MS = 2000L
+        const val DEBOUNCE_UP_MS = 300L
+
+        // Real-world calibrated face-down flatness thresholds (supports camera bumps and case elevation):
+        // Normal gravity magnitude = 9.81 m/s^2.
+        // Z <= -9.0 m/s^2 corresponds to screen tilt angle <= 23° from horizontal.
         private const val FACE_DOWN_ENTER_Z_THRESHOLD = -9.0f
-        private const val FACE_DOWN_EXIT_Z_THRESHOLD = -7.0f
+        private const val MAX_HORIZONTAL_GRAVITY = 2.5f
 
-        // Horizontal tilt constraint: sqrt(X^2 + Y^2) must be <= 1.8 m/s^2 for true flat orientation (~23° tilt).
-        private const val MAX_HORIZONTAL_GRAVITY = 1.8f
+        // Exit thresholds: tilt beyond ~40° or screen face up
+        private const val FACE_DOWN_EXIT_Z_THRESHOLD = -7.5f
+        private const val EXIT_HORIZONTAL_GRAVITY = 3.5f
 
-        // Physical stillness threshold: Delta G must be <= 0.15 m/s^2.
-        private const val MAX_DELTA_G_STILLNESS = 0.15f
+        // Table stillness thresholds (filters out physiological hand tremor in mid-air for virtual proximity):
+        // Solid table: Gyro < 0.02 rad/s, Delta G < 0.03 m/s^2.
+        // Handheld in mid-air: Gyro > 0.05 rad/s, Delta G > 0.07 m/s^2 due to 8-12Hz muscle tremor.
+        private const val MAX_DELTA_G_TABLE_STILLNESS = 0.07f
+        private const val MAX_GYRO_TABLE_STILLNESS = 0.05f
 
-        // Gyroscope rotational stillness threshold: <= 0.08 rad/s.
-        private const val MAX_GYRO_ROTATION_STILLNESS = 0.08f
-
-        // Batch latency 50,000 microseconds (50ms) for real-time hardware FIFO delivery.
-        private const val BATCH_LATENCY_US = 50_000
+        // Final stillness threshold required at 2.0s mark
+        private const val MAX_DELTA_G_FINAL_CHECK = 0.12f
+        private const val MAX_GYRO_FINAL_CHECK = 0.08f
 
         private val _isRunning = MutableStateFlow(false)
         val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()

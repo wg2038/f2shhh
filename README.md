@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">🤫 Flip to Shhh</h1>
   <p align="center">
-    <strong>Ultra-Low Power, Precision Flip-to-Mute Utility Tailored for Samsung Galaxy Devices, with Universal Android (13+) Compatibility</strong>
+    <strong>Ultra-Low Power, Pixel-Grade Flip-to-DND Utility for Non-Pixel Android (13+) Devices</strong>
   </p>
   <p align="center">
     <a href="README.md">English</a> •
@@ -11,10 +11,10 @@
   <p align="center">
     <a href="https://github.com/wg2038/f2shhh/releases/latest"><img src="https://img.shields.io/github/v/release/wg2038/f2shhh?style=flat-square&color=blue" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
-    <img src="https://img.shields.io/badge/Tailored_For-Samsung_Galaxy_/_One_UI-0057FF?style=flat-square" alt="Samsung Galaxy">
+    <img src="https://img.shields.io/badge/Designed_For-Non--Pixel_Android_13%2B-0057FF?style=flat-square" alt="Android 13+">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
     <img src="https://img.shields.io/badge/APK_Size-~2.2_MB-success?style=flat-square" alt="Size">
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License"></a>
   </p>
 </p>
 
@@ -38,30 +38,28 @@
 
 ## 📖 Introduction
 
-**Flip to Shhh** is a high-performance, ultra-lightweight, and zero-ad background utility. While **originally tailored and fine-tuned for Samsung Galaxy smartphones (One UI)** to deliver native haptic tactile feedback and power efficiency, it is **broadly compatible with all Android 13+ devices**.
+**Flip to Shhh** is a high-performance, ultra-lightweight, and zero-ad background utility that brings Google Pixel's signature **Flip to Shhh (Flip to Do Not Disturb)** feature to all non-Pixel Android 13+ devices (Samsung One UI, Xiaomi HyperOS, OPPO ColorOS, vivo OriginOS, OnePlus OxygenOS, etc.).
 
-Simply flip your phone face down on a surface to instantly activate Do Not Disturb (DND) mode and lock your screen.
+Simply place your phone face down flat on a surface for 2 seconds to activate Do Not Disturb (DND) mode with crisp dual-pulse tactile haptic feedback and optional screen lock.
 
 ---
 
 ## ⚡ Core Technical Architecture & Highlights
 
-### 1. Tailored for Samsung Galaxy & Universal Compatibility
-Originally engineered to complement Samsung Galaxy One UI (which lacks a native Flip-to-Shhh toggle found in Pixel phones), the application is fully optimized for Samsung's hardware profile while maintaining seamless compatibility with all smartphones running Android 13+.
+### 1. Pixel-Grade Precision Gesture Detection
+Re-engineered based on Google Pixel's Flip-to-Shhh detection principles:
+- **Strict Flat Surface Constraint**: Evaluates device spatial tilt angle $\le 15^\circ$ ($Z \le -9.3\text{ m/s}^2$, horizontal acceleration $\sqrt{X^2+Y^2} \le 2.0\text{ m/s}^2$), preventing accidental triggers when the phone is leaning, resting on slanted cushions, or in vehicle cradles.
+- **Proximity Sensor Fusion**: Dynamically verifies that the screen is facing a flat physical surface (`TYPE_PROXIMITY`), with graceful zero-overhead fallback for hardware variants.
+- **Continuous 2.0s Stillness Window**: Requires continuous physical stillness during the 2-second debounce period. Any pickup or tilt instantly resets the timer.
 
-### 2. Pure Gravity Vector Algorithm (No Light Sensor Dependency)
-Unlike generic flip-to-mute apps that continuously poll proximity or under-display light sensors (which cause CPU wake locks and OLED panel battery drain on Samsung flagships), **Flip to Shhh** relies exclusively on the fused `TYPE_GRAVITY` and `TYPE_GYROSCOPE` hardware sensors. This guarantees zero impact on device Deep Sleep.
+### 2. Standardized Dual-Pulse Haptic Feedback
+Defaults to native dual-pulse haptic vibration ("咚 - 咚") on flip-down via `VibrationEffect.Composition.PRIMITIVE_THUD` and a subtle tactile click on flip-up, delivering a refined and consistent user experience.
 
 ### 3. Hardware FIFO Batching (50ms Latency)
-Utilizes hardware-level sensor batching (`BATCH_LATENCY_US = 50_000`) offloaded to the low-power Sensor Hub DSP. Sensor data is processed in batches every 50ms, drastically reducing CPU interrupts and eliminating power consumption during idle state.
+Utilizes hardware-level sensor batching (`BATCH_LATENCY_US = 50_000`) offloaded to low-power Sensor Hub DSP. Sensor data is processed in batches every 50ms, eliminating CPU wake locks and preserving Deep Sleep battery life.
 
-### 4. Dual-Threshold Hysteresis & Stillness Verification
-To prevent accidental triggers caused by micro-vibrations or placing the phone in a pocket:
-- **Enter Condition**: $Z \le -9.0\text{ m/s}^2$, Horizontal Gravity $\sqrt{X^2+Y^2} \le 1.8\text{ m/s}^2$ (max ~23° tilt angle), Acceleration Delta $\Delta G \le 0.15\text{ m/s}^2$, and Rotational Velocity $\omega \le 0.08\text{ rad/s}$.
-- **Exit Condition**: $Z > -7.0\text{ m/s}^2$ or Horizontal Gravity $> 2.8\text{ m/s}^2$.
-
-### 5. Non-Destructive Lock Screen & Smart DND Ownership
-- **Biometric Lock Preserved**: Built on Android's native Accessibility Service (`GLOBAL_ACTION_LOCK_SCREEN`), allowing seamless Fingerprint and Face Unlock afterwards (unlike legacy DeviceAdmin APIs which force PIN entry).
+### 4. Non-Destructive Lock Screen & Smart DND Ownership
+- **Biometric Unlock Preserved**: Built on Android's native Accessibility Service (`GLOBAL_ACTION_LOCK_SCREEN`), allowing seamless Fingerprint and Face Unlock afterwards (unlike legacy DeviceAdmin APIs which force PIN entry).
 - **Smart DND Ownership Tracking**: Prevents conflicts with system-scheduled DND (e.g., 23:00–07:00). If DND was already active prior to flipping, flipping face-up will not override or forcibly disable your scheduled DND rule.
 
 ---
@@ -98,4 +96,5 @@ The optimized APK will be generated at:
 
 ## 📄 License
 
-This project is licensed under the [Apache License 2.0](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
+
