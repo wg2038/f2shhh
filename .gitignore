@@ -27,8 +27,7 @@ app/build/
 *.log
 *.tmp
 
-# AI Agent & Workspace Scratch directories
-.workbuddy/
-.cowork-temp/
-.cursor/
-.cline/
+# Editor & IDE directories
+.vscode/
+*.swp
+*~

@@ -11,10 +11,10 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **Device Information:**
-- Device: [e.g. Samsung Galaxy S24 Ultra, Galaxy S23+]
-- One UI Version: [e.g. One UI 6.1]
-- Android Version: [e.g. Android 14]
-- App Version: [e.g. v1.0.0]
+- Device: [e.g. Samsung Galaxy S24, Xiaomi 14, OnePlus 12, etc.]
+- OS / ROM: [e.g. One UI 6.1, HyperOS 1.0, ColorOS 14, OriginOS 4]
+- Android Version: [e.g. Android 13 / 14]
+- App Version: [e.g. v1.1.0]
 
 **To Reproduce**
 Steps to reproduce the behavior:

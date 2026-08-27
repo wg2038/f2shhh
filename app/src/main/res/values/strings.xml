@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Flip to Shhh</string>
-    <string name="accessibility_service_desc">翻转静音自动锁屏服务（仅用于手机面朝下时自动熄屏锁屏，保留指纹与面部解锁支持）</string>
+    <string name="accessibility_service_desc">Flip to Shhh auto-lock screen service (used exclusively to lock screen when phone is face down, retaining Fingerprint and Face Unlock support).</string>
 </resources>

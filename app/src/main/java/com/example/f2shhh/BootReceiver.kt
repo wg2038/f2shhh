@@ -17,17 +17,22 @@ class BootReceiver : BroadcastReceiver() {
         Log.i(TAG, "Received broadcast intent: $action")
 
         if (action == Intent.ACTION_BOOT_COMPLETED ||
-            action == Intent.ACTION_LOCKED_BOOT_COMPLETED ||
             action == Intent.ACTION_MY_PACKAGE_REPLACED ||
             action == "android.intent.action.QUICKBOOT_POWERON" ||
             action == "com.htc.intent.action.QUICKBOOT_POWERON"
         ) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val autoStartEnabled = prefs.getBoolean(KEY_AUTO_START_BOOT, true)
+            val isUserEnabled = prefs.getBoolean(KEY_SERVICE_USER_ENABLED, true)
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             if (!autoStartEnabled) {
                 Log.i(TAG, "Auto-start on boot is disabled by user setting.")
+                return
+            }
+
+            if (!isUserEnabled) {
+                Log.i(TAG, "Service was manually disabled by user; skipping auto-start on boot.")
                 return
             }
 
@@ -50,5 +55,6 @@ class BootReceiver : BroadcastReceiver() {
         private const val TAG = "BootReceiver"
         private const val PREFS_NAME = "flip_to_shhh_prefs"
         const val KEY_AUTO_START_BOOT = "auto_start_on_boot"
+        const val KEY_SERVICE_USER_ENABLED = "service_user_enabled"
     }
 }

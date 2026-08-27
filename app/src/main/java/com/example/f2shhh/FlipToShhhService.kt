@@ -12,7 +12,6 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -42,7 +41,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private lateinit var notifManager: NotificationManager
-    private lateinit var audioManager: AudioManager
     private var vibrator: Vibrator? = null
     private lateinit var prefs: SharedPreferences
     private val handler = Handler(Looper.getMainLooper())
@@ -67,7 +65,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     private var faceDownStartTime: Long = 0L
 
-    private var previousRingerMode: Int = AudioManager.RINGER_MODE_NORMAL
     private var previousInterruptionFilter: Int = NotificationManager.INTERRUPTION_FILTER_ALL
     private var wasDndActivatedByService: Boolean = false
 
@@ -125,7 +122,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         Log.i(TAG, "onCreate")
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
             vibratorManager?.defaultVibrator
@@ -147,7 +143,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
         // Restore persisted state if service was killed and restarted.
         if (prefs.getBoolean(KEY_DND_ACTIVE, false)) {
-            previousRingerMode = prefs.getInt(KEY_PREV_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL)
             previousInterruptionFilter = prefs.getInt(
                 KEY_PREV_INTERRUPTION_FILTER, NotificationManager.INTERRUPTION_FILTER_ALL
             )
@@ -194,6 +189,8 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     // ── Sensor Listeners ───────────────────────────────────────────────────
 
     private fun registerSensors() {
+        unregisterAllSensors()
+
         activeOrientationSensor?.let { sensor ->
             val registered = sensorManager.registerListener(
                 this,
@@ -223,10 +220,8 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     private fun unregisterAllSensors() {
-        activeOrientationSensor?.let { sensorManager.unregisterListener(this, it) }
-        gyroscopeSensor?.let { sensorManager.unregisterListener(this, it) }
-        proximitySensor?.let { sensorManager.unregisterListener(this, it) }
-        handler.removeCallbacksAndMessages(null)
+        sensorManager.unregisterListener(this)
+        handler.removeCallbacks(debounceRunnable)
     }
 
     // ── Sensor Events ──────────────────────────────────────────────────────
@@ -433,7 +428,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     private fun persistState(active: Boolean) {
         prefs.edit()
             .putBoolean(KEY_DND_ACTIVE, active)
-            .putInt(KEY_PREV_RINGER_MODE, previousRingerMode)
             .putInt(KEY_PREV_INTERRUPTION_FILTER, previousInterruptionFilter)
             .putBoolean(KEY_WAS_DND_ACTIVATED_BY_SERVICE, wasDndActivatedByService)
             .apply()
@@ -441,6 +435,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     // ── Fixed Default Dual-Pulse Haptic ─────────────────────────────────────
 
+    @Suppress("DEPRECATION")
     private fun triggerFlipDownHaptic() {
         val vib = vibrator ?: return
         if (!vib.hasVibrator()) return
@@ -465,6 +460,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun triggerFlipUpHaptic() {
         val vib = vibrator ?: return
         if (!vib.hasVibrator()) return
@@ -490,13 +486,46 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     // ── Notifications ──────────────────────────────────────────────────────
 
+    private fun getLocalizedText(key: String): String {
+        val langMode = if (::prefs.isInitialized) prefs.getInt("language_mode", 0) else 0
+        val isTrad: Boolean
+        val isEng: Boolean
+        if (langMode == 0) {
+            val locale = resources.configuration.locales.get(0)
+            val lang = locale.language
+            val country = locale.country
+            if (lang.startsWith("zh")) {
+                isEng = false
+                isTrad = country.equals("TW", ignoreCase = true) ||
+                         country.equals("HK", ignoreCase = true) ||
+                         country.equals("MO", ignoreCase = true)
+            } else {
+                isEng = true
+                isTrad = false
+            }
+        } else {
+            isEng = (langMode == 3)
+            isTrad = (langMode == 2)
+        }
+
+        return when (key) {
+            "channel_name" -> if (isEng) "Flip to Shhh Service" else if (isTrad) "Flip to Shhh 服務" else "Flip to Shhh 服务"
+            "channel_desc" -> if (isEng) "Flip to mute gesture detection service" else if (isTrad) "Flip to Shhh 翻轉靜音服務" else "Flip to Shhh 翻转静音服务"
+            "notif_active_title" -> if (isEng) "Do Not Disturb Active" else if (isTrad) "已開啟勿擾模式" else "已开启勿扰模式"
+            "notif_active_desc" -> if (isEng) "Phone face down · Calls & notifications muted" else if (isTrad) "手機螢幕朝下 · 來電與通知已靜音" else "手机面朝下 · 来电与通知已静音"
+            "notif_idle_title" -> if (isEng) "Flip to Shhh is Running" else if (isTrad) "Flip to Shhh 執行中" else "Flip to Shhh 运行中"
+            "notif_idle_desc" -> if (isEng) "Flip phone face down to mute" else if (isTrad) "翻轉手機螢幕朝下即可自動開啟勿擾" else "翻转手机面朝下即可自动开启勿扰"
+            else -> ""
+        }
+    }
+
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Flip to Shhh 服务",
+            getLocalizedText("channel_name"),
             NotificationManager.IMPORTANCE_MIN
         ).apply {
-            description = "Flip to Shhh 翻转静音服务"
+            description = getLocalizedText("channel_desc")
             setShowBadge(false)
         }
         notifManager.createNotificationChannel(channel)
@@ -524,12 +553,12 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
         if (active) {
             builder
-                .setContentTitle("已开启勿扰模式")
-                .setContentText("手机面朝下 · 来电与通知已静音")
+                .setContentTitle(getLocalizedText("notif_active_title"))
+                .setContentText(getLocalizedText("notif_active_desc"))
         } else {
             builder
-                .setContentTitle("Flip to Shhh 运行中")
-                .setContentText("翻转手机面朝下即可自动开启勿扰")
+                .setContentTitle(getLocalizedText("notif_idle_title"))
+                .setContentText(getLocalizedText("notif_idle_desc"))
         }
 
         return builder.build()
@@ -544,7 +573,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
         private const val PREFS_NAME = "flip_to_shhh_prefs"
         private const val KEY_DND_ACTIVE = "dnd_active"
-        private const val KEY_PREV_RINGER_MODE = "prev_ringer_mode"
         private const val KEY_PREV_INTERRUPTION_FILTER = "prev_interruption_filter"
         private const val KEY_WAS_DND_ACTIVATED_BY_SERVICE = "was_dnd_activated_by_service"
         const val KEY_AUTO_LOCK_SCREEN = "auto_lock_screen"
