@@ -22,16 +22,16 @@
 <br>
 
 <p align="center">
-  <a href="docs/screenshots/main_screen.png">
-    <img src="docs/screenshots/main_screen.png" width="240" alt="主畫面">
+  <a href="docs/screenshots/zh-TW/main_screen.png">
+    <img src="docs/screenshots/zh-TW/main_screen.png" width="240" alt="主畫面">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="docs/screenshots/settings_sheet.png">
-    <img src="docs/screenshots/settings_sheet.png" width="240" alt="設定面板">
+  <a href="docs/screenshots/zh-TW/settings_sheet.png">
+    <img src="docs/screenshots/zh-TW/settings_sheet.png" width="240" alt="設定面板">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="docs/screenshots/about_screen.png">
-    <img src="docs/screenshots/about_screen.png" width="240" alt="關於頁面">
+  <a href="docs/screenshots/zh-TW/about_screen.png">
+    <img src="docs/screenshots/zh-TW/about_screen.png" width="240" alt="關於頁面">
   </a>
 </p>
 

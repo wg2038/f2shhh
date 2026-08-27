@@ -22,16 +22,16 @@
 <br>
 
 <p align="center">
-  <a href="docs/screenshots/main_screen.png">
-    <img src="docs/screenshots/main_screen.png" width="240" alt="Main Screen">
+  <a href="docs/screenshots/en/main_screen.png">
+    <img src="docs/screenshots/en/main_screen.png" width="240" alt="Main Screen">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="docs/screenshots/settings_sheet.png">
-    <img src="docs/screenshots/settings_sheet.png" width="240" alt="Settings Sheet">
+  <a href="docs/screenshots/en/settings_sheet.png">
+    <img src="docs/screenshots/en/settings_sheet.png" width="240" alt="Settings Sheet">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="docs/screenshots/about_screen.png">
-    <img src="docs/screenshots/about_screen.png" width="240" alt="About Screen">
+  <a href="docs/screenshots/en/about_screen.png">
+    <img src="docs/screenshots/en/about_screen.png" width="240" alt="About Screen">
   </a>
 </p>
 
