@@ -386,18 +386,17 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     private fun disableDoNotDisturb() {
-        if (!notifManager.isNotificationPolicyAccessGranted) {
-            Log.e(TAG, "Cannot disable DND: Notification Policy Access not granted!")
-            return
-        }
+        if (!_isDndActive.value) return
         try {
-            if (!_isDndActive.value) return
-
-            if (wasDndActivatedByService) {
-                notifManager.setInterruptionFilter(previousInterruptionFilter)
-                Log.i(TAG, "DND disabled, restored interruptionFilter=$previousInterruptionFilter")
+            if (notifManager.isNotificationPolicyAccessGranted) {
+                if (wasDndActivatedByService) {
+                    notifManager.setInterruptionFilter(previousInterruptionFilter)
+                    Log.i(TAG, "DND disabled, restored interruptionFilter=$previousInterruptionFilter")
+                } else {
+                    Log.i(TAG, "DND was already active prior to flip-down; leaving current system DND state untouched")
+                }
             } else {
-                Log.i(TAG, "DND was already active prior to flip-down; leaving current system DND state untouched")
+                Log.w(TAG, "Notification Policy Access not granted during disableDoNotDisturb; resetting internal state")
             }
 
             persistState(active = false)
@@ -410,9 +409,9 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     private fun restoreDndIfNeeded() {
-        if (_isDndActive.value && notifManager.isNotificationPolicyAccessGranted) {
+        if (_isDndActive.value) {
             try {
-                if (wasDndActivatedByService) {
+                if (notifManager.isNotificationPolicyAccessGranted && wasDndActivatedByService) {
                     notifManager.setInterruptionFilter(previousInterruptionFilter)
                 }
                 persistState(active = false)
