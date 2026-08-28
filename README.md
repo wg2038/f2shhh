@@ -9,6 +9,7 @@
     <a href="README_zh-TW.md">繁體中文</a>
   </p>
   <p align="center">
+    <a href="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml"><img src="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
     <a href="https://github.com/wg2038/f2shhh/releases"><img src="https://img.shields.io/badge/Release-v2.1.5-0057FF?style=flat-square&logo=github" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
     <img src="https://img.shields.io/badge/Designed_For-Non--Pixel_Android_13%2B-0057FF?style=flat-square" alt="Android 13+">
