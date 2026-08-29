@@ -2400,7 +2400,7 @@ private fun NeofetchBlock() {
             "DE" to "GNOME 50",
             "Terminal" to "gnome-terminal",
             "CPU" to cpuLine,
-            "Memory" to "$memUsed MiB / $memTotal MiB",
+            "Memory" to "${memUsed}MiB / ${memTotal}MiB",
             "Disk (/)" to "${diskUsedG}G / ${diskTotalG}G ($diskPct%)"
         )
     }
