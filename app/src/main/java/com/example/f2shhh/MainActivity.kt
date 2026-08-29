@@ -2404,14 +2404,21 @@ private fun NeofetchBlock() {
     }
 
     Column {
-        Text(
-            text = UBUNTU_LOGO,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp, // the art is 41 columns: sized to fit even 320dp-wide screens
-            lineHeight = 13.sp,
-            color = Color(0xFFE95420), // Ubuntu orange
-            modifier = Modifier.fillMaxWidth()
-        )
+        // The block wraps its widest line so the Box can center the ring as a whole;
+        // per-line centering (textAlign) would realign each row and scramble the art.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = UBUNTU_LOGO,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp, // the art is 41 columns: sized to fit even 320dp-wide screens
+                lineHeight = 13.sp,
+                color = Color(0xFFE95420), // Ubuntu orange
+                modifier = Modifier
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "cicada@ubuntu",
