@@ -1,6 +1,7 @@
 package com.example.f2shhh
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.NotificationManager
 import android.app.WallpaperManager
 import android.content.Context
@@ -12,8 +13,12 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.PowerManager
+import android.os.StatFs
+import android.os.SystemClock
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -102,10 +107,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.random.Random
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.io.File
 import java.util.Locale
 
 
@@ -2263,6 +2266,203 @@ private fun extractLyricsFromOgg(context: Context): String {
     }
 }
 
+private val UBUNTU_LOGO = """
+            .-/+oossssoo+/-.
+        `:+ssssssssssssssssss+:`
+      -+ssssssssssssssssssyyssss+-
+    .ossssssssssssssssssdMMMNysssso.
+   /ssssssssssshdmmNNmmyNMMMMhssssss/
+  +ssssssssssmyyMMMMmmMMMMNNmmdsss+
+  /sssssssshNMMMyhhyyyyhmNMMMNhssssss/
+ +sssssssssdmydMMMMMMMMddMMMNhsssssss+
+ +sssssssshNMNMhhyyyyyyNMMMMhsssssss+
+.ossyssssssNMMNyssyssssyNMMMysssssss+
+-ossssssssshdmmmmmmmmmmmdddsssssssso-
+ +ssssssssssssssssssysssssssssss+
+  `/sssssssssssssssssssssssss+`
+    `-:+osssssssssso+:-`
+          `.:/++++/:-`
+""".trimIndent()
+
+// One prompt line of the session scrollback: user@host, path, typed text and the
+// always-present (metric-stable) block cursor.
+@Composable
+private fun TerminalPromptLine(command: String, cursorVisible: Boolean) {
+    Text(
+        text = buildAnnotatedString {
+            withStyle(SpanStyle(color = Color(0xFF8AE234), fontWeight = FontWeight.Bold)) {
+                append("cicada@ubuntu")
+            }
+            withStyle(SpanStyle(color = Color.White)) {
+                append(":")
+            }
+            withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) {
+                append("~")
+            }
+            withStyle(SpanStyle(color = Color.White)) {
+                append("$ $command")
+            }
+            withStyle(SpanStyle(color = if (cursorVisible) Color.White else Color.Transparent)) {
+                append("█")
+            }
+        },
+        fontFamily = FontFamily.Monospace,
+        fontSize = 13.sp,
+        lineHeight = 20.sp,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+// neofetch snapshot: Host/CPU/RAM/Disk/Uptime come from the real device (no
+// permissions needed); OS/Kernel/DE stay in the Ubuntu fiction on purpose.
+@Composable
+private fun NeofetchBlock() {
+    val context = LocalContext.current
+    val info = remember {
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val mi = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(mi)
+        val memTotal = mi.totalMem / (1024L * 1024L)
+        val memUsed = (mi.totalMem - mi.availMem) / (1024L * 1024L)
+        val stat = StatFs(Environment.getDataDirectory().absolutePath)
+        val diskTotalG = stat.totalBytes shr 30
+        val diskUsedG = (stat.totalBytes - stat.availableBytes) shr 30
+        val diskPct = (((stat.totalBytes - stat.availableBytes) * 100) / stat.totalBytes).toInt()
+        val upS = SystemClock.elapsedRealtime() / 1000L
+        val upD = upS / 86400
+        val upH = (upS % 86400) / 3600
+        val upM = (upS % 3600) / 60
+        val uptime = when {
+            upD > 0 -> "$upD days, $upH hours, $upM mins"
+            upH > 0 -> "$upH hours, $upM mins"
+            else -> "$upM mins"
+        }
+        val abi = when (Build.SUPPORTED_ABIS.firstOrNull()) {
+            "arm64-v8a" -> "aarch64"
+            "armeabi-v7a" -> "armv7l"
+            "x86_64" -> "x86_64"
+            else -> "aarch64"
+        }
+        val hw = try {
+            File("/proc/cpuinfo").bufferedReader().useLines { lines ->
+                var found: String? = null
+                for (l in lines) {
+                    if (l.startsWith("Hardware")) {
+                        found = l.substringAfter(':').trim()
+                        break
+                    }
+                }
+                found
+            }
+        } catch (_: Exception) {
+            null
+        }
+        val cpuName = hw?.replace("Qualcomm Technologies, Inc", "Qualcomm")?.takeIf { it.isNotBlank() }
+            ?: Build.HARDWARE.replaceFirstChar { it.uppercase(Locale.US) }
+        val ghz = try {
+            String.format(
+                Locale.US, "%.2f",
+                File("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq").readText().trim().toLong() / 1_000_000.0
+            )
+        } catch (_: Exception) {
+            null
+        }
+        val cpuLine = buildString {
+            append(cpuName)
+            append(" (")
+            append(Runtime.getRuntime().availableProcessors())
+            append(")")
+            if (ghz != null) {
+                append(" @ ")
+                append(ghz)
+                append("GHz")
+            }
+        }
+        val wm = context.resources.displayMetrics
+        listOf(
+            "OS" to "Ubuntu 26.04.1 LTS $abi",
+            "Host" to Build.MODEL,
+            "Kernel" to "7.2.2-070202-generic",
+            "Uptime" to uptime,
+            "Packages" to "2184 (dpkg)",
+            "Shell" to "bash 5.2.32",
+            "Resolution" to "${wm.widthPixels}x${wm.heightPixels}",
+            "DE" to "GNOME 50",
+            "Terminal" to "gnome-terminal",
+            "CPU" to cpuLine,
+            "Memory" to "$memUsed MiB / $memTotal MiB",
+            "Disk (/)" to "${diskUsedG}G / ${diskTotalG}G ($diskPct%)"
+        )
+    }
+
+    Column {
+        Text(
+            text = UBUNTU_LOGO,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+            lineHeight = 14.sp,
+            color = Color(0xFFE95420), // Ubuntu orange
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "cicada@ubuntu",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFE95420)
+        )
+        Text(
+            text = "-------------",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+            color = Color(0xFFE95420)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        info.forEach { (label, value) ->
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(color = Color(0xFFE95420), fontWeight = FontWeight.Bold)) {
+                        append("$label: ")
+                    }
+                    withStyle(SpanStyle(color = Color(0xFFD3D7CF))) {
+                        append(value)
+                    }
+                },
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                lineHeight = 15.sp,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = buildAnnotatedString {
+                listOf(
+                    Color(0xFFCC0000), Color(0xFF4E9A06), Color(0xFFC4A000), Color(0xFF3465A4),
+                    Color(0xFF75507B), Color(0xFF06989A), Color(0xFFD3D7CF)
+                ).forEach { c ->
+                    withStyle(SpanStyle(color = c)) { append("███") }
+                }
+            },
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp
+        )
+        Text(
+            text = buildAnnotatedString {
+                listOf(
+                    Color(0xFFEF2929), Color(0xFF8AE234), Color(0xFFFCE94F), Color(0xFF729FCF),
+                    Color(0xFFAD7FA8), Color(0xFF34E2E2), Color(0xFFFFFFFF)
+                ).forEach { c ->
+                    withStyle(SpanStyle(color = c)) { append("███") }
+                }
+            },
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp
+        )
+    }
+}
+
 @Composable
 fun EasterEggTerminalScreen(
     onExit: () -> Unit,
@@ -2295,8 +2495,12 @@ fun EasterEggTerminalScreen(
 
     // Command typing animation on entry (Authentic Linux CLI invocation)
     val fullCommand = "./coralsea-cli -f coralsea.ogg --lyrics"
-    var typedCommand by remember { mutableStateOf("") }
+    val neofetchCommand = "neofetch"
+    var neofetchTyped by remember { mutableStateOf("") }
+    var showNeofetch by remember { mutableStateOf(false) }
+    var coralseaTyped by remember { mutableStateOf("") }
     var isCommandEntered by remember { mutableStateOf(false) }
+    var showFinalPrompt by remember { mutableStateOf(false) }
 
     // Hard terminal-style cursor blink: a boolean toggle recomposes only the cursor
     // readers twice per blink, instead of an alpha animation running at display rate.
@@ -2312,11 +2516,24 @@ fun EasterEggTerminalScreen(
         }
     }
 
-    // Progressive command typing effect on launch
+    // Boot sequence: type neofetch, print its snapshot in one shot, then type the
+    // player command. The seek shortcut may complete the session instantly; every
+    // step bails out as soon as that happens.
     LaunchedEffect(Unit) {
+        delay(300)
+        for (i in 1..neofetchCommand.length) {
+            if (isCommandEntered) return@LaunchedEffect
+            neofetchTyped = neofetchCommand.substring(0, i)
+            delay(45)
+        }
         delay(250)
+        if (isCommandEntered) return@LaunchedEffect
+        showNeofetch = true
+        delay(1400)
+        if (isCommandEntered) return@LaunchedEffect
         for (i in 1..fullCommand.length) {
-            typedCommand = fullCommand.substring(0, i)
+            if (isCommandEntered) return@LaunchedEffect
+            coralseaTyped = fullCommand.substring(0, i)
             delay(55)
         }
         delay(200)
@@ -2443,6 +2660,10 @@ fun EasterEggTerminalScreen(
         }
         delay(350)
         showRmOutput = true
+        delay(1200)
+        // bash survives the segfault (it lives in memory): a fresh empty prompt is the
+        // real post-crash sight — a working shell on a system that no longer exists.
+        showFinalPrompt = true
         delay(3000) // 停留 3 秒
         onExit()
     }
@@ -2458,14 +2679,16 @@ fun EasterEggTerminalScreen(
     }
 
     val displayedCount = if (isCommandEntered && !playerFailed) (activeIndex + 1).coerceAtLeast(0) else 0
+    // Stream head items that precede the intro logs; scroll targets account for them.
+    val neofetchItemCount = if (showNeofetch) 3 else 1
 
     // 4 Authentic Linux kernel & audio pipeline logs during the 10-second piano instrumental gap (1:1 realtime aligned)
     val introLogs = remember {
         listOf(
-            Triple(50L, "[    0.042] ", "ALSA: opened pcmC0D0p, 44.1kHz stereo"),
-            Triple(2150L, "[    2.150] ", "PipeWire: bound stream 'coralsea.ogg'"),
-            Triple(5820L, "[    5.820] ", "Vorbis: comments: 珊瑚海 / Jay Chou & Lara"),
-            Triple(8940L, "[    8.940] ", "TTY1: streaming embedded lyrics (ANSI)")
+            Triple(50L, "[0.042] ", "ALSA: opened pcmC0D0p, 44.1kHz stereo"),
+            Triple(2150L, "[2.150] ", "PipeWire: bound stream 'coralsea.ogg'"),
+            Triple(5820L, "[5.820] ", "Vorbis: comments: 珊瑚海 / Jay Chou & Lara"),
+            Triple(8940L, "[8.940] ", "TTY1: streaming embedded lyrics (ANSI)")
         )
     }
 
@@ -2493,7 +2716,10 @@ fun EasterEggTerminalScreen(
     }
 
     // Auto-scroll seamlessly with visual offset
-    LaunchedEffect(activeIndex, isSongFinished, showRmOutput, displayedIntroCount, showPlayerError, userDragging) {
+    LaunchedEffect(
+        neofetchTyped, showNeofetch, coralseaTyped, isCommandEntered,
+        activeIndex, isSongFinished, showRmOutput, displayedIntroCount, showPlayerError, userDragging
+    ) {
         if (userDragging) return@LaunchedEffect
         val sinceDragEnd = System.currentTimeMillis() - lastDragEndTime
         if (sinceDragEnd < 4000L) delay(4000L - sinceDragEnd)
@@ -2501,11 +2727,14 @@ fun EasterEggTerminalScreen(
             if (listState.layoutInfo.totalItemsCount > 0) {
                 listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
             }
-        } else if (activeIndex >= 0 && isCommandEntered) {
-            val targetScroll = (displayedIntroCount + activeIndex - 2).coerceAtLeast(0)
+        } else if (!isCommandEntered) {
+            // While commands type, pin the stream to its bottom like a real terminal.
+            listState.dispatchRawDelta(1_000_000f)
+        } else if (activeIndex >= 0) {
+            val targetScroll = (displayedIntroCount + neofetchItemCount + activeIndex - 2).coerceAtLeast(0)
             listState.animateScrollToItem(targetScroll)
         } else if (displayedIntroCount > 0) {
-            listState.animateScrollToItem(displayedIntroCount - 1)
+            listState.animateScrollToItem(displayedIntroCount - 1 + neofetchItemCount)
         }
     }
 
@@ -2516,111 +2745,43 @@ fun EasterEggTerminalScreen(
         onDispose { onBarsDarkChanged(false) }
     }
 
-    val motdDate = remember {
-        SimpleDateFormat("EEE MMM d hh:mm:ss a 'CST' yyyy", Locale.US).format(Date())
-    }
-
-    // landscape-sysinfo gauges are re-rolled per visit so the box feels live on repeat
-    // runs; disk usage and the wlan0 IP stay fixed because the ssh disconnect message
-    // after the rm sequence echoes that IP.
-    val motdSysInfo = remember {
-        fun load(v: Float) = String.format(Locale.US, "%.2f", v)
-        val base = 0.08f + Random.nextFloat() * 0.35f
-        val mem = 45 + Random.nextInt(26)
-        val swap = if (Random.nextInt(100) < 85) 0 else 1 + Random.nextInt(5)
-        val temp = 31.0f + Random.nextFloat() * 7.5f
-        val procs = 280 + Random.nextInt(140)
-        "  System load: ${load(base * 1.2f)} ${load(base)} ${load(base * 0.85f)}\n" +
-                "  Usage of /: 62.4% of 238.05GB\n" +
-                "  Memory usage: $mem%\n" +
-                "  Swap usage: $swap%\n" +
-                "  Temperature: ${String.format(Locale.US, "%.1f", temp)} C\n" +
-                "  Processes: $procs\n" +
-                "  Users logged in: 1\n" +
-                "  IPv4 (wlan0): 192.168.1.23"
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF300A24)) // Ubuntu Aubergine
             .statusBarsPadding()
             .navigationBarsPadding()
+            // Long-press anywhere for 3s to jump to the last 10 seconds of the song.
+            .pointerInput(mediaPlayerInstance, totalDurationMs) {
+                detectTapGestures(
+                    onPress = {
+                        val job = coroutineScope.launch {
+                            delay(3000)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            val player = mediaPlayerInstance
+                            val duration = if (totalDurationMs > 0) totalDurationMs else (player?.duration?.toLong() ?: 0L)
+                            if (player != null && duration > 10000L) {
+                                neofetchTyped = neofetchCommand
+                                showNeofetch = true
+                                coralseaTyped = fullCommand
+                                isCommandEntered = true
+                                val targetMs = (duration - 10000L).coerceAtLeast(0L).toInt()
+                                player.seekTo(targetMs)
+                                currentPosMs = targetMs.toLong()
+                            }
+                        }
+                        tryAwaitRelease()
+                        job.cancel()
+                    }
+                )
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 18.dp, vertical = 14.dp)
         ) {
-            // 1. Pinned Ubuntu 26.04 LTS MOTD (Long press 3s jumps to last 10s)
-            Text(
-                text = "Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.2.2-070202-generic aarch64)\n\n" +
-                        " * Documentation:  https://help.ubuntu.com\n" +
-                        " * Management:     https://landscape.canonical.com\n" +
-                        " * Support:        https://ubuntu.com/pro\n\n" +
-                        "System information as of $motdDate\n\n" +
-                        "$motdSysInfo\n\n" +
-                        "0 updates can be applied immediately.\n\n" +
-                        "Last login: Fri Aug 28 11:24:07 PM CST 2026 from 192.168.1.5\n",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                color = Color(0xFFD3D7CF),
-                lineHeight = 18.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .pointerInput(mediaPlayerInstance, totalDurationMs) {
-                        detectTapGestures(
-                            onPress = {
-                                val job = coroutineScope.launch {
-                                    delay(3000)
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    val player = mediaPlayerInstance
-                                    val duration = if (totalDurationMs > 0) totalDurationMs else (player?.duration?.toLong() ?: 0L)
-                                    if (player != null && duration > 10000L) {
-                                        typedCommand = fullCommand
-                                        isCommandEntered = true
-                                        val targetMs = (duration - 10000L).coerceAtLeast(0L).toInt()
-                                        player.seekTo(targetMs)
-                                        currentPosMs = targetMs.toLong()
-                                    }
-                                }
-                                tryAwaitRelease()
-                                job.cancel()
-                            }
-                        )
-                    }
-            )
-
-            // 2. Pinned Command Prompt (Slow typing animation for ./coralsea-cli --lyrics)
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(SpanStyle(color = Color(0xFF8AE234), fontWeight = FontWeight.Bold)) {
-                        append("cicada@ubuntu")
-                    }
-                    withStyle(SpanStyle(color = Color.White)) {
-                        append(":")
-                    }
-                    withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) {
-                        append("~")
-                    }
-                    withStyle(SpanStyle(color = Color.White)) {
-                        append("$ $typedCommand")
-                    }
-                    withStyle(
-                        SpanStyle(color = if (!isCommandEntered && cursorVisible) Color.White else Color.Transparent)
-                    ) {
-                        append("█")
-                    }
-                },
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                lineHeight = 20.sp,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 3. Typing Lyrics Terminal Stream (ANSI colors: Male -> Blue, Female -> Yellow, Duet -> Green)
+            // Session scrollback stream (ANSI colors: Male -> Blue, Female -> Yellow, Duet -> Green)
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -2641,6 +2802,25 @@ fun EasterEggTerminalScreen(
                 contentPadding = PaddingValues(top = 10.dp, bottom = 140.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // neofetch: typed on the first prompt, its snapshot prints in one shot.
+                item(key = "cmd_neofetch") {
+                    TerminalPromptLine(
+                        command = neofetchTyped,
+                        cursorVisible = !showNeofetch && cursorVisible
+                    )
+                }
+                if (showNeofetch) {
+                    item(key = "neofetch_out") {
+                        NeofetchBlock()
+                    }
+                    item(key = "cmd_coralsea") {
+                        TerminalPromptLine(
+                            command = coralseaTyped,
+                            cursorVisible = !isCommandEntered && cursorVisible
+                        )
+                    }
+                }
+
                 // Player failure output (fallback when MediaPlayer.create fails)
                 if (showPlayerError) {
                     item(key = "player_error") {
@@ -2815,30 +2995,9 @@ fun EasterEggTerminalScreen(
                 if (isSongFinished) {
                     item(key = "rm_rf_sequence") {
                         Spacer(modifier = Modifier.height(14.dp))
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(color = Color(0xFF8AE234), fontWeight = FontWeight.Bold)) {
-                                    append("cicada@ubuntu")
-                                }
-                                withStyle(SpanStyle(color = Color.White)) {
-                                    append(":")
-                                }
-                                withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) {
-                                    append("~")
-                                }
-                                withStyle(SpanStyle(color = Color.White)) {
-                                    append("$ $rmCommandTyped")
-                                }
-                                withStyle(
-                                    SpanStyle(color = if (!showRmOutput && cursorVisible) Color.White else Color.Transparent)
-                                ) {
-                                    append("█")
-                                }
-                            },
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 13.sp,
-                            lineHeight = 20.sp,
-                            modifier = Modifier.fillMaxWidth()
+                        TerminalPromptLine(
+                            command = rmCommandTyped,
+                            cursorVisible = !showRmOutput && cursorVisible
                         )
                         if (showRmOutput) {
                             Spacer(modifier = Modifier.height(6.dp))
@@ -2868,12 +3027,10 @@ fun EasterEggTerminalScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFFEF2929) // Ubuntu Red
                                 )
-                                Text(
-                                    text = "Connection closed by 192.168.1.23 port 22",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 12.5.sp,
-                                    color = Color(0xFF888888)
-                                )
+                            }
+                            if (showFinalPrompt) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                TerminalPromptLine(command = "", cursorVisible = cursorVisible)
                             }
                         }
                     }
