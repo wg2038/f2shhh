@@ -2266,30 +2266,30 @@ private fun extractLyricsFromOgg(context: Context): String {
     }
 }
 
-// Canonical Ubuntu logo, byte-exact from the neofetch project (dylanaraps/neofetch,
-// "Ubuntu" ascii block). Pure ASCII on purpose: every glyph lives in the monospace
-// font on every OEM, so the ring can never fall back to a wider glyph and deform.
+// Ubuntu logo (neofetch "Ubuntu" block), right edge mirror-normalized so the ring
+// renders symmetric. Pure ASCII: every glyph lives in the monospace font on every
+// OEM - no fallback glyphs can deform the shape.
 private val UBUNTU_LOGO = """
-            .-/+oossssoo+\-.
-        ´:+ssssssssssssssssss+:`
-      -+ssssssssssssssssssyyssss+-
-    .ossssssssssssssssssdMMMNysssso.
-   /ssssssssssshdmmNNmmyNMMMMhssssss\
-  +ssssssssshmydMMMMMMMNddddyssssssss+
+            .-/+oosssssoo+\-.
+        ´:+sssssssssssssssssss+:`
+      -+sssssssssssssssssssyyssss+-
+    .osssssssssssssssssssdMMMNysssso.
+   /sssssssssssshdmmNNmmyNMMMMhssssss\
+  +sssssssssshmydMMMMMMMNddddyssssssss+
  /ssssssssshNMMMyhhyyyyhmNMMMNhssssssss\
 .ssssssssdMMMNhssssssssssshNMMMdssssssss.
 +sssshhhhyNMMNyssssssssssssyNMMMysssssss+
-ossyNMMMNyMMhsssssssssssssshmmmhssssssso
-ossyNMMMNyMMhssssssssssssshmmmhssssssso
+ossyNMMMNyMMhssssssssssssssshmmmhssssssso
+ossyNMMMNyMMhssssssssssssssshmmmhssssssso
 +sssshhhhyNMMNyssssssssssssyNMMMysssssss+
-.ssssssssdMMMNhsssssssssshNMMMdssssssss.
- \sssssssshNMMMyhhyyyyhdNMMMNhssssssss/
-  +sssssssssdmydMMMMMMMMddddyssssssss+
-   \ssssssssssshdmNNNNmyNMMMMhssssss/
-    .ossssssssssssssssssdMMMNysssso.
-      -+ssssssssssssssssyyyyssss+-
-        `:+ssssssssssssssssss+:`
-            .-\+oossssoo+/-.
+.ssssssssdMMMNhssssssssssshNMMMdssssssss.
+ \ssssssssshNMMMyhhyyyyhdNMMMNhssssssss/
+  +ssssssssssdmydMMMMMMMMddddyssssssss+
+   \sssssssssssshdmNNNNmyNMMMMhssssss/
+    .osssssssssssssssssssdMMMNysssso.
+      -+sssssssssssssssssyyyyssss+-
+        `:+sssssssssssssssssss+:`
+            .-\+oosssssoo+/-.
 """.trimIndent().trimEnd()
 
 // One prompt line of the session scrollback: user@host, path, typed text and the
