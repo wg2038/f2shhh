@@ -143,12 +143,19 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
         // Restore persisted state if service was killed and restarted.
         if (prefs.getBoolean(KEY_DND_ACTIVE, false)) {
-            previousInterruptionFilter = prefs.getInt(
-                KEY_PREV_INTERRUPTION_FILTER, NotificationManager.INTERRUPTION_FILTER_ALL
-            )
-            wasDndActivatedByService = prefs.getBoolean(KEY_WAS_DND_ACTIVATED_BY_SERVICE, false)
-            _isDndActive.value = true
-            _isFlippedDown.value = true
+            val systemDndStillOn = notifManager.isNotificationPolicyAccessGranted &&
+                    notifManager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL
+            if (systemDndStillOn) {
+                previousInterruptionFilter = prefs.getInt(
+                    KEY_PREV_INTERRUPTION_FILTER, NotificationManager.INTERRUPTION_FILTER_ALL
+                )
+                wasDndActivatedByService = prefs.getBoolean(KEY_WAS_DND_ACTIVATED_BY_SERVICE, false)
+                _isDndActive.value = true
+                _isFlippedDown.value = true
+            } else {
+                // DND was turned off externally while the service was dead; drop stale state.
+                persistState(active = false)
+            }
         }
 
         createNotificationChannel()
@@ -169,6 +176,9 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         Log.i(TAG, "onStartCommand")
         startForeground(NOTIFICATION_ID, createForegroundNotification())
 
+        // registerSensors() removes any pending debounce runnable; a stranded
+        // pendingTargetState here would permanently block future flip detection.
+        pendingTargetState = TargetFlipState.NONE
         registerSensors()
         _isRunning.value = true
         return START_STICKY
@@ -386,18 +396,24 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     private fun disableDoNotDisturb() {
-        if (!notifManager.isNotificationPolicyAccessGranted) {
-            Log.e(TAG, "Cannot disable DND: Notification Policy Access not granted!")
-            return
-        }
+        if (!_isDndActive.value) return
         try {
-            if (!_isDndActive.value) return
-
-            if (wasDndActivatedByService) {
-                notifManager.setInterruptionFilter(previousInterruptionFilter)
-                Log.i(TAG, "DND disabled, restored interruptionFilter=$previousInterruptionFilter")
+            if (notifManager.isNotificationPolicyAccessGranted) {
+                if (wasDndActivatedByService) {
+                    // Only restore when the filter is still the one this service set; if the user
+                    // changed DND manually while face down, leave their choice intact.
+                    val currentFilter = notifManager.currentInterruptionFilter
+                    if (currentFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY) {
+                        notifManager.setInterruptionFilter(previousInterruptionFilter)
+                        Log.i(TAG, "DND disabled, restored interruptionFilter=$previousInterruptionFilter")
+                    } else {
+                        Log.i(TAG, "DND was modified externally during flip-down ($currentFilter); leaving system DND state untouched")
+                    }
+                } else {
+                    Log.i(TAG, "DND was already active prior to flip-down; leaving current system DND state untouched")
+                }
             } else {
-                Log.i(TAG, "DND was already active prior to flip-down; leaving current system DND state untouched")
+                Log.w(TAG, "Notification Policy Access not granted during disableDoNotDisturb; resetting internal state")
             }
 
             persistState(active = false)
@@ -410,9 +426,12 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     private fun restoreDndIfNeeded() {
-        if (_isDndActive.value && notifManager.isNotificationPolicyAccessGranted) {
+        if (_isDndActive.value) {
             try {
-                if (wasDndActivatedByService) {
+                if (notifManager.isNotificationPolicyAccessGranted &&
+                    wasDndActivatedByService &&
+                    notifManager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+                ) {
                     notifManager.setInterruptionFilter(previousInterruptionFilter)
                 }
                 persistState(active = false)
@@ -520,12 +539,16 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            getLocalizedText("channel_name"),
-            NotificationManager.IMPORTANCE_MIN
-        ).apply {
-            description = getLocalizedText("channel_desc")
+        val name = getLocalizedText("channel_name")
+        val desc = getLocalizedText("channel_desc")
+        // Channel names are frozen at creation time by the system; recreate when the
+        // app language changes so the name follows the active locale.
+        val existing = notifManager.getNotificationChannel(CHANNEL_ID)
+        if (existing != null && existing.name?.toString() != name) {
+            notifManager.deleteNotificationChannel(CHANNEL_ID)
+        }
+        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_MIN).apply {
+            description = desc
             setShowBadge(false)
         }
         notifManager.createNotificationChannel(channel)

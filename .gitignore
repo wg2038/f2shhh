@@ -31,3 +31,6 @@ app/build/
 .vscode/
 *.swp
 *~
+
+# Release signing credentials
+keystore.properties

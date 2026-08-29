@@ -1,0 +1,13 @@
+Flip to Shhh is an open-source, privacy-first, ultra-lightweight background utility designed to bring Google Pixel's signature Flip to Shhh (Flip to Do Not Disturb) gesture to all non-Pixel Android 13+ devices (Samsung One UI, Xiaomi HyperOS, OPPO ColorOS, vivo OriginOS, OnePlus OxygenOS, Motorola, etc.).
+
+Simply place your phone face down flat on a desk or table for 2 seconds. The app instantly activates Do Not Disturb (DND) mode with crisp dual-pulse haptic feedback and optional screen locking. Picking up or flipping the phone face-up automatically restores normal ringer settings within 300ms.
+
+Features:
+• Multi-sensor spatial gravity vector & tilt angle analysis
+• Optical proximity detection with virtual sensor fallback
+• 2.0s continuous table stillness window with physiological hand tremor filtering
+• Biometric-friendly screen lock via native Accessibility Service
+• Smart DND ownership tracking (never overrides existing scheduled quiet hours)
+• 100% offline with ZERO network permissions (INTERNET permission omitted)
+• Samsung One UI / Material You inspired dynamic palette adaptation
+• Fully localized in English, Simplified Chinese, and Traditional Chinese

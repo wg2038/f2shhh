@@ -33,11 +33,11 @@
 
 | 组件模块 | 类型 | 核心职责 |
 | :--- | :--- | :--- |
-| [`MainActivity.kt`](file:///Users/cicada/AndroidStudioProjects/F2shhh/app/src/main/java/com/example/f2shhh/MainActivity.kt) | `ComponentActivity` | 单 Activity 交互中心，承载极简呼吸感主控面板、核心权限向导、One UI 风格设置抽屉与关于页。 |
-| [`FlipToShhhService.kt`](file:///Users/cicada/AndroidStudioProjects/F2shhh/app/src/main/java/com/example/f2shhh/FlipToShhhService.kt) | `LifecycleService` | 常驻前台核心服务，负责多传感器事件监听、重力姿态解算、2.0 秒静止判定、DND 状态切换与触感震动反馈。 |
-| [`FlipLockAccessibilityService.kt`](file:///Users/cicada/AndroidStudioProjects/F2shhh/app/src/main/java/com/example/f2shhh/FlipLockAccessibilityService.kt) | `AccessibilityService` | 轻量无障碍服务，基于 `GLOBAL_ACTION_LOCK_SCREEN` 实现不破坏生物识别（指纹/面容）的原生锁屏。 |
-| [`BootReceiver.kt`](file:///Users/cicada/AndroidStudioProjects/F2shhh/app/src/main/java/com/example/f2shhh/BootReceiver.kt) | `BroadcastReceiver` | 监听系统 `BOOT_COMPLETED` 等广播，在系统冷启动或应用升级后自动拉起服务。 |
-| [`AppIcons.kt`](file:///Users/cicada/AndroidStudioProjects/F2shhh/app/src/main/java/com/example/f2shhh/AppIcons.kt) | `Object` | 手写矢量图标库，彻底剔除庞大的官方扩展图标依赖，实现包体极度瘦身。 |
+| [`MainActivity.kt`](app/src/main/java/com/example/f2shhh/MainActivity.kt) | `ComponentActivity` | 单 Activity 交互中心，承载极简呼吸感主控面板、核心权限向导、One UI 风格设置抽屉与关于页。 |
+| [`FlipToShhhService.kt`](app/src/main/java/com/example/f2shhh/FlipToShhhService.kt) | `LifecycleService` | 常驻前台核心服务，负责多传感器事件监听、重力姿态解算、2.0 秒静止判定、DND 状态切换与触感震动反馈。 |
+| [`FlipLockAccessibilityService.kt`](app/src/main/java/com/example/f2shhh/FlipLockAccessibilityService.kt) | `AccessibilityService` | 轻量无障碍服务，基于 `GLOBAL_ACTION_LOCK_SCREEN` 实现不破坏生物识别（指纹/面容）的原生锁屏。 |
+| [`BootReceiver.kt`](app/src/main/java/com/example/f2shhh/BootReceiver.kt) | `BroadcastReceiver` | 监听系统 `BOOT_COMPLETED` 等广播，在系统冷启动或应用升级后自动拉起服务。 |
+| [`AppIcons.kt`](app/src/main/java/com/example/f2shhh/AppIcons.kt) | `Object` | 手写矢量图标库，彻底剔除庞大的官方扩展图标依赖，实现包体极度瘦身。 |
 
 ---
 
@@ -126,7 +126,7 @@ fun performLock(): Boolean {
 - **痛点分析**：Compose 官方扩展库 `androidx.compose.material:material-icons-extended` 包含超过 10,000 个矢量图标类，导致空包体积膨胀逾 50MB。
 - **工程瘦身实践**：
   1. 彻底剔除 `material-icons-extended` 依赖。
-  2. 提取应用所需的 12 个核心图标，在 [`AppIcons.kt`](file:///Users/cicada/AndroidStudioProjects/F2shhh/app/src/main/java/com/example/f2shhh/AppIcons.kt) 中手写精简 Path 矢量定义。
+  2. 提取应用所需的 12 个核心图标，在 [`AppIcons.kt`](app/src/main/java/com/example/f2shhh/AppIcons.kt) 中手写精简 Path 矢量定义。
   3. 结合 R8 Tree-Shaking 与资源压缩，最终 Release APK 仅 **~2.2 MB**，体积缩减达 96%。
 
 ---
