@@ -236,7 +236,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
                 val distance = event.values[0]
                 val maxRange = proximitySensor?.maximumRange?.takeIf { it > 0f } ?: 5.0f
                 isProximityNear = (distance == 0f || (distance < maxRange && distance <= 4.0f))
-                Log.d(TAG, "Proximity updated: distance=$distance, near=$isProximityNear")
                 checkFlipState()
                 return
             }

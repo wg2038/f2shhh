@@ -22,7 +22,7 @@ android {
         applicationId = "com.example.f2shhh"
         minSdk = 33
         targetSdk = 34
-        versionCode = 5
+        versionCode = 6
         versionName = "2.1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
