@@ -2086,9 +2086,9 @@ fun AboutScreen(
                         exit = shrinkVertically(animationSpec = tween(300)) + fadeOut()
                     ) {
                         val statusText = when (clickCount) {
-                            4 -> "systemd[1055]: Starting coralsea-cli.service..."
-                            5 -> "systemd[1055]: coralsea-cli.service: Child 2107 belongs to coralsea-cli.service."
-                            6 -> "systemd[1055]: Started coralsea-cli.service."
+                            4 -> "systemd[1055]: Starting coralsea-session.service..."
+                            5 -> "systemd[1055]: coralsea-session.service: Child 2107 belongs to coralsea-session.service."
+                            6 -> "systemd[1055]: Started coralsea-session.service."
                             else -> "cicada@ubuntu:~$"
                         }
                         val statusColor = if (clickCount >= 7) Color(0xFF8AE234) else Color(0xFF729FCF)
