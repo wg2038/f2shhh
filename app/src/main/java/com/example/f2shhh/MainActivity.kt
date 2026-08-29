@@ -2778,13 +2778,23 @@ fun EasterEggTerminalScreen(
 
                         Text(
                             text = buildAnnotatedString {
+                                // Reverse video (\e[7m): the active line inverts — singer's
+                                // ANSI color as background, aubergine glyphs — marking the
+                                // cursor row the way terminals highlight a selection.
                                 withStyle(
-                                    SpanStyle(color = activeColor, fontWeight = FontWeight.SemiBold)
+                                    SpanStyle(
+                                        color = Color(0xFF300A24),
+                                        background = activeColor,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 ) {
                                     append(line.text.substring(0, typedCharsCount))
                                 }
                                 withStyle(
-                                    SpanStyle(color = if (cursorVisible) activeColor else Color.Transparent)
+                                    SpanStyle(
+                                        color = if (cursorVisible) Color(0xFF300A24) else Color.Transparent,
+                                        background = if (cursorVisible) activeColor else Color.Transparent
+                                    )
                                 ) {
                                     append("█")
                                 }
