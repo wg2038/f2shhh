@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.3.0] - 2026-08-29 (Official Release · 小而美回归)
+## [1.3.0] - 2026-08-29 (Official Release)
 
 ### Fixed
 - **Language switching now applies immediately**: v1.1.0 kept separate language states in the settings sheet and the main screen, so a newly picked language only appeared after closing the sheet or resuming the app. Language state is now a single source of truth (`MainActivity → FlipToShhhScreen → SettingsBottomSheet`) and recomposes the whole UI instantly.
