@@ -2507,6 +2507,7 @@ fun EasterEggTerminalScreen(
     var isSongFinished by remember { mutableStateOf(false) }
     var rmCommandTyped by remember { mutableStateOf("") }
     var showRmOutput by remember { mutableStateOf(false) }
+    var showSudoPassword by remember { mutableStateOf(false) }
 
     // Command typing animation on entry (Authentic Linux CLI invocation)
     val fullCommand = "./coralsea-cli -f coralsea.ogg --lyrics"
@@ -2664,22 +2665,25 @@ fun EasterEggTerminalScreen(
         }
     }
 
-    // End-of-song sequence: execute authentic sudo rm -rf --no-preserve-root /* and wait 3s before exit
+    // End-of-song sequence: sudo asks for the password (typed invisibly — sudo never
+    // echoes it), then the rm -v flood compressed to the glob-order highlights. rm
+    // itself cannot segfault, so after the flood bash simply returns a fresh prompt:
+    // a working shell on a system that no longer exists.
     LaunchedEffect(isSongFinished) {
         if (!isSongFinished) return@LaunchedEffect
         delay(600)
-        val fullCmd = "sudo rm -rfv --no-preserve-root /*"
+        val fullCmd = "sudo rm -rfv /*"
         for (i in 1..fullCmd.length) {
             rmCommandTyped = fullCmd.substring(0, i)
             delay(55)
         }
         delay(350)
+        showSudoPassword = true
+        delay(1600)
         showRmOutput = true
         delay(1200)
-        // bash survives the segfault (it lives in memory): a fresh empty prompt is the
-        // real post-crash sight — a working shell on a system that no longer exists.
         showFinalPrompt = true
-        delay(3000) // 停留 3 秒
+        delay(3000)
         onExit()
     }
 
@@ -2733,7 +2737,7 @@ fun EasterEggTerminalScreen(
     // Auto-scroll seamlessly with visual offset
     LaunchedEffect(
         neofetchTyped, showNeofetch, coralseaTyped, isCommandEntered,
-        activeIndex, isSongFinished, showRmOutput, displayedIntroCount, showPlayerError, userDragging
+        activeIndex, isSongFinished, showSudoPassword, showRmOutput, displayedIntroCount, showPlayerError, userDragging
     ) {
         if (userDragging) return@LaunchedEffect
         val sinceDragEnd = System.currentTimeMillis() - lastDragEndTime
@@ -3006,14 +3010,33 @@ fun EasterEggTerminalScreen(
                     }
                 }
 
-                // End-of-song sequence: Authentic Linux sudo rm -rf --no-preserve-root /*
+                // End-of-song sequence. '/*' expands to the children of /, so rm's
+                // root-directory guard never triggers and --no-preserve-root would be
+                // dead weight; the flood keeps glob order as highlight entries.
                 if (isSongFinished) {
                     item(key = "rm_rf_sequence") {
                         Spacer(modifier = Modifier.height(14.dp))
                         TerminalPromptLine(
                             command = rmCommandTyped,
-                            cursorVisible = !showRmOutput && cursorVisible
+                            cursorVisible = !showSudoPassword && cursorVisible
                         )
+                        if (showSudoPassword) {
+                            Text(
+                                text = buildAnnotatedString {
+                                    append("[sudo] password for cicada:")
+                                    withStyle(
+                                        SpanStyle(color = if (!showRmOutput && cursorVisible) Color.White else Color.Transparent)
+                                    ) {
+                                        append("█")
+                                    }
+                                },
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 13.sp,
+                                lineHeight = 20.sp,
+                                color = Color(0xFFD3D7CF),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                         if (showRmOutput) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -3023,6 +3046,8 @@ fun EasterEggTerminalScreen(
                                     "removed '/dev/soul'",
                                     "rm: cannot remove '/dev': Device or resource busy",
                                     "removed directory '/etc'",
+                                    "removed directory '/home'",
+                                    "removed directory '/opt'",
                                     "rm: cannot remove '/proc': Device or resource busy",
                                     "rm: cannot remove '/sys': Device or resource busy",
                                     "removed directory '/usr'",
@@ -3035,13 +3060,6 @@ fun EasterEggTerminalScreen(
                                         color = Color(0xFFD3D7CF)
                                     )
                                 }
-                                Text(
-                                    text = "Segmentation fault (core dumped)",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFEF2929) // Ubuntu Red
-                                )
                             }
                             if (showFinalPrompt) {
                                 Spacer(modifier = Modifier.height(10.dp))
