@@ -2266,23 +2266,31 @@ private fun extractLyricsFromOgg(context: Context): String {
     }
 }
 
+// Canonical Ubuntu logo, byte-exact from the neofetch project (dylanaraps/neofetch,
+// "Ubuntu" ascii block). Pure ASCII on purpose: every glyph lives in the monospace
+// font on every OEM, so the ring can never fall back to a wider glyph and deform.
 private val UBUNTU_LOGO = """
-            .-/+oossssoo+/-.
-        `:+ssssssssssssssssss+:`
+            .-/+oossssoo+\-.
+        ´:+ssssssssssssssssss+:`
       -+ssssssssssssssssssyyssss+-
     .ossssssssssssssssssdMMMNysssso.
-   /ssssssssssshdmmNNmmyNMMMMhssssss/
-  +ssssssssssmyyMMMMmmMMMMNNmmdsss+
-  /sssssssshNMMMyhhyyyyhmNMMMNhssssss/
- +sssssssssdmydMMMMMMMMddMMMNhsssssss+
- +sssssssshNMNMhhyyyyyyNMMMMhsssssss+
-.ossyssssssNMMNyssyssssyNMMMysssssss+
--ossssssssshdmmmmmmmmmmmdddsssssssso-
- +ssssssssssssssssssysssssssssss+
-  `/sssssssssssssssssssssssss+`
-    `-:+osssssssssso+:-`
-          `.:/++++/:-`
-""".trimIndent()
+   /ssssssssssshdmmNNmmyNMMMMhssssss\
+  +ssssssssshmydMMMMMMMNddddyssssssss+
+ /ssssssssshNMMMyhhyyyyhmNMMMNhssssssss\
+.ssssssssdMMMNhssssssssssshNMMMdssssssss.
++sssshhhhyNMMNyssssssssssssyNMMMysssssss+
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso
+ossyNMMMNyMMhssssssssssssshmmmhssssssso
++sssshhhhyNMMNyssssssssssssyNMMMysssssss+
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.
+ \sssssssshNMMMyhhyyyyhdNMMMNhssssssss/
+  +sssssssssdmydMMMMMMMMddddyssssssss+
+   \ssssssssssshdmNNNNmyNMMMMhssssss/
+    .ossssssssssssssssssdMMMNysssso.
+      -+ssssssssssssssssyyyyssss+-
+        `:+ssssssssssssssssss+:`
+            .-\+oossssoo+/-.
+""".trimIndent().trimEnd()
 
 // One prompt line of the session scrollback: user@host, path, typed text and the
 // always-present (metric-stable) block cursor.
@@ -2399,8 +2407,8 @@ private fun NeofetchBlock() {
         Text(
             text = UBUNTU_LOGO,
             fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-            lineHeight = 14.sp,
+            fontSize = 11.sp, // the art is 41 columns: sized to fit even 320dp-wide screens
+            lineHeight = 13.sp,
             color = Color(0xFFE95420), // Ubuntu orange
             modifier = Modifier.fillMaxWidth()
         )
