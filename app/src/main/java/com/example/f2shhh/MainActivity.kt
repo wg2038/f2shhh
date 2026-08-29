@@ -2435,7 +2435,7 @@ fun EasterEggTerminalScreen(
     LaunchedEffect(isSongFinished) {
         if (!isSongFinished) return@LaunchedEffect
         delay(600)
-        val fullCmd = "sudo rm -rf --no-preserve-root /*"
+        val fullCmd = "sudo rm -rfv --no-preserve-root /*"
         for (i in 1..fullCmd.length) {
             rmCommandTyped = fullCmd.substring(0, i)
             delay(55)
@@ -2461,10 +2461,10 @@ fun EasterEggTerminalScreen(
     // 4 Authentic Linux kernel & audio pipeline logs during the 10-second piano instrumental gap (1:1 realtime aligned)
     val introLogs = remember {
         listOf(
-            Triple(50L, "[0.042] ", "ALSA: Initialized PCM (44.1kHz stereo)"),
-            Triple(2150L, "[2.150] ", "PipeWire: Bound sink 'coralsea.ogg'"),
-            Triple(5820L, "[5.820] ", "Vorbis: Jay Chou & Lara"),
-            Triple(8940L, "[8.940] ", "ANSI: Streaming embedded lyrics...")
+            Triple(50L, "[    0.042] ", "ALSA: opened pcmC0D0p, 44.1kHz stereo"),
+            Triple(2150L, "[    2.150] ", "PipeWire: bound stream 'coralsea.ogg'"),
+            Triple(5820L, "[    5.820] ", "Vorbis: comments: 珊瑚海 / Jay Chou & Lara"),
+            Triple(8940L, "[    8.940] ", "TTY1: streaming embedded lyrics (ANSI)")
         )
     }
 
@@ -2516,7 +2516,7 @@ fun EasterEggTerminalScreen(
     }
 
     val motdDate = remember {
-        SimpleDateFormat("EEE MMM d yyyy", Locale.US).format(Date())
+        SimpleDateFormat("EEE MMM d hh:mm:ss a 'CST' yyyy", Locale.US).format(Date())
     }
 
     Box(
@@ -2533,10 +2533,21 @@ fun EasterEggTerminalScreen(
         ) {
             // 1. Pinned Ubuntu 26.04 LTS MOTD (Long press 3s jumps to last 10s)
             Text(
-                text = "Welcome to Ubuntu 26.04 LTS (GNU/Linux 6.14.0-generic aarch64)\n\n" +
+                text = "Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.2.2-070202-generic aarch64)\n\n" +
                         " * Documentation:  https://help.ubuntu.com\n" +
+                        " * Management:     https://landscape.canonical.com\n" +
                         " * Support:        https://ubuntu.com/pro\n\n" +
-                        "System information as of $motdDate\n",
+                        "System information as of $motdDate\n\n" +
+                        "  System load: 0.42 0.31 0.27\n" +
+                        "  Usage of /: 62.4% of 238.05GB\n" +
+                        "  Memory usage: 58%\n" +
+                        "  Swap usage: 0%\n" +
+                        "  Temperature: 33.5 C\n" +
+                        "  Processes: 342\n" +
+                        "  Users logged in: 1\n" +
+                        "  IPv4 (wlan0): 192.168.1.23\n\n" +
+                        "0 updates can be applied immediately.\n\n" +
+                        "Last login: Fri Aug 28 11:24:07 PM CST 2026 from 192.168.1.5\n",
                 fontFamily = FontFamily.Monospace,
                 fontSize = 12.sp,
                 color = Color(0xFFD3D7CF),
@@ -2656,21 +2667,23 @@ fun EasterEggTerminalScreen(
                             when (logIdx) {
                                 0 -> {
                                     withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) { append("ALSA: ") }
-                                    withStyle(SpanStyle(color = Color(0xFFD3D7CF))) { append("Initialized PCM (44.1kHz stereo)") }
+                                    withStyle(SpanStyle(color = Color(0xFFD3D7CF))) { append("opened pcmC0D0p, 44.1kHz stereo") }
                                 }
                                 1 -> {
                                     withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) { append("PipeWire: ") }
-                                    withStyle(SpanStyle(color = Color(0xFFD3D7CF))) { append("Bound sink 'coralsea.ogg'") }
+                                    withStyle(SpanStyle(color = Color(0xFFD3D7CF))) { append("bound stream ") }
+                                    withStyle(SpanStyle(color = Color(0xFFFCE94F), fontWeight = FontWeight.Bold)) { append("'coralsea.ogg'") }
                                 }
                                 2 -> {
                                     withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) { append("Vorbis: ") }
+                                    withStyle(SpanStyle(color = Color(0xFFD3D7CF))) { append("comments: 珊瑚海 / ") }
                                     withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) { append("Jay Chou ") }
                                     withStyle(SpanStyle(color = Color(0xFFD3D7CF))) { append("& ") }
                                     withStyle(SpanStyle(color = Color(0xFFFCE94F), fontWeight = FontWeight.Bold)) { append("Lara") }
                                 }
                                 3 -> {
-                                    withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) { append("ANSI: ") }
-                                    withStyle(SpanStyle(color = Color(0xFF8AE234), fontWeight = FontWeight.SemiBold)) { append("Streaming embedded lyrics...") }
+                                    withStyle(SpanStyle(color = Color(0xFF729FCF), fontWeight = FontWeight.Bold)) { append("TTY1: ") }
+                                    withStyle(SpanStyle(color = Color(0xFF8AE234), fontWeight = FontWeight.SemiBold)) { append("streaming embedded lyrics (ANSI)") }
                                 }
                             }
                             withStyle(
@@ -2816,21 +2829,33 @@ fun EasterEggTerminalScreen(
                         if (showRmOutput) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                listOf(
+                                    "removed '/bin'",
+                                    "removed '/boot/vmlinuz-7.2.2-070202-generic'",
+                                    "removed '/dev/soul'",
+                                    "rm: cannot remove '/dev': Device or resource busy",
+                                    "removed directory '/etc'",
+                                    "rm: cannot remove '/proc': Device or resource busy",
+                                    "rm: cannot remove '/sys': Device or resource busy",
+                                    "removed directory '/usr'",
+                                    "removed directory '/var'"
+                                ).forEach { line ->
+                                    Text(
+                                        text = line,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 12.5.sp,
+                                        color = Color(0xFFD3D7CF)
+                                    )
+                                }
                                 Text(
-                                    text = "rm: removing all roots: '/bin', '/usr', '/etc', '/dev/soul' ...",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 12.5.sp,
-                                    color = Color(0xFFD3D7CF)
-                                )
-                                Text(
-                                    text = "[SYSTEM PURGED] Segmentation fault (core dumped)",
+                                    text = "Segmentation fault (core dumped)",
                                     fontFamily = FontFamily.Monospace,
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFFEF2929) // Ubuntu Red
                                 )
                                 Text(
-                                    text = "Connection to ubuntu:22 closed by remote host.",
+                                    text = "Connection closed by 192.168.1.23 port 22",
                                     fontFamily = FontFamily.Monospace,
                                     fontSize = 12.5.sp,
                                     color = Color(0xFF888888)
