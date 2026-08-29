@@ -263,8 +263,11 @@ class MainActivity : ComponentActivity() {
             val notifPermissionLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) { }
+            // Whether the easter-egg terminal is forcing dark system bars; hoisted here so
+            // the theme re-applies the correct appearance the moment the terminal closes.
+            var terminalBarsDark by remember { mutableStateOf(false) }
 
-            FlipToShhhTheme(themeMode = themeMode) {
+            FlipToShhhTheme(themeMode = themeMode, barsDarkOverride = terminalBarsDark) {
                 var onboardingComplete by remember {
                     mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_ONBOARDING_COMPLETE, false))
                 }
@@ -309,7 +312,8 @@ class MainActivity : ComponentActivity() {
                             },
                             onThemeModeChanged = { newTheme ->
                                 themeMode = newTheme
-                            }
+                            },
+                            onTerminalBarsDarkChanged = { terminalBarsDark = it }
                         )
                     }
                 }
@@ -428,28 +432,37 @@ private fun dynamicColorSchemeFromSeed(seedColor: Color, isDark: Boolean): Color
 fun SystemBarsColorEffect(darkTheme: Boolean) {
     val view = LocalView.current
     val context = LocalContext.current
-    SideEffect {
-        var parent: Any? = view
-        var dialogWindow: android.view.Window? = null
-        while (parent != null) {
-            if (parent is DialogWindowProvider) {
-                dialogWindow = parent.window
-                break
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(darkTheme, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                applySystemBarAppearance(view, context, darkTheme)
             }
-            parent = (parent as? android.view.View)?.parent
         }
-        val targetWindow = dialogWindow ?: (context as? Activity)?.window
-        if (targetWindow != null) {
-            val insetsController = WindowCompat.getInsetsController(targetWindow, targetWindow.decorView)
-            insetsController.isAppearanceLightStatusBars = !darkTheme
-            insetsController.isAppearanceLightNavigationBars = !darkTheme
-        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        applySystemBarAppearance(view, context, darkTheme)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+}
+
+private fun applySystemBarAppearance(view: android.view.View, context: Context, darkTheme: Boolean) {
+    // Compose hosts bottom sheets in their own dialog window whose DialogWindowProvider is
+    // the content view's direct parent and is NOT reachable through the View parent chain.
+    // The appearance must go to that dialog window: writing the activity's from inside a
+    // sheet leaves the dialog on default (light icons), which One UI then keeps applying
+    // even after the sheet is dismissed.
+    val targetWindow = (view.parent as? DialogWindowProvider)?.window
+        ?: (context as? Activity)?.window ?: return
+    val insetsController = WindowCompat.getInsetsController(targetWindow, targetWindow.decorView)
+    insetsController.isAppearanceLightStatusBars = !darkTheme
+    insetsController.isAppearanceLightNavigationBars = !darkTheme
 }
 
 @Composable
 fun FlipToShhhTheme(
     themeMode: Int = 0,
+    barsDarkOverride: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -481,7 +494,7 @@ fun FlipToShhhTheme(
         }
     }
 
-    SystemBarsColorEffect(darkTheme = darkTheme)
+    SystemBarsColorEffect(darkTheme = darkTheme || barsDarkOverride)
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -747,7 +760,8 @@ fun OnboardingPermissionItem(
 fun FlipToShhhScreen(
     languageMode: Int,
     onLanguageModeChanged: (Int) -> Unit = {},
-    onThemeModeChanged: (Int) -> Unit = {}
+    onThemeModeChanged: (Int) -> Unit = {},
+    onTerminalBarsDarkChanged: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -820,7 +834,11 @@ fun FlipToShhhScreen(
     ) { isEggOpen ->
         if (isEggOpen) {
             EasterEggTerminalScreen(
-                onExit = { showEasterEggTerminal = false }
+                onExit = {
+                    onTerminalBarsDarkChanged(false)
+                    showEasterEggTerminal = false
+                },
+                onBarsDarkChanged = onTerminalBarsDarkChanged
             )
         } else {
             AnimatedContent(
@@ -2245,7 +2263,10 @@ private fun extractLyricsFromOgg(context: Context): String {
 }
 
 @Composable
-fun EasterEggTerminalScreen(onExit: () -> Unit) {
+fun EasterEggTerminalScreen(
+    onExit: () -> Unit,
+    onBarsDarkChanged: (Boolean) -> Unit = {}
+) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
     val haptic = LocalHapticFeedback.current
@@ -2278,6 +2299,10 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
 
     // Hard terminal-style cursor blink: a boolean toggle recomposes only the cursor
     // readers twice per blink, instead of an alpha animation running at display rate.
+    // Every cursor site keeps the █ glyph in the string permanently and toggles only its
+    // color: on devices whose monospace font lacks U+2588 (One UI) the fallback glyph has
+    // taller metrics, so adding/removing it re-measured the line and made the column
+    // visibly jump on every blink.
     var cursorVisible by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -2483,7 +2508,12 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
         }
     }
 
-    SystemBarsColorEffect(darkTheme = true)
+    // The terminal is dark regardless of the app theme; route the bar override through the
+    // theme (see barsDarkOverride) so the correct appearance is restored on exit.
+    DisposableEffect(Unit) {
+        onBarsDarkChanged(true)
+        onDispose { onBarsDarkChanged(false) }
+    }
 
     val motdDate = remember {
         SimpleDateFormat("EEE MMM d yyyy", Locale.US).format(Date())
@@ -2551,10 +2581,10 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
                     withStyle(SpanStyle(color = Color.White)) {
                         append("$ $typedCommand")
                     }
-                    if (!isCommandEntered && cursorVisible) {
-                        withStyle(SpanStyle(color = Color.White)) {
-                            append("█")
-                        }
+                    withStyle(
+                        SpanStyle(color = if (!isCommandEntered && cursorVisible) Color.White else Color.Transparent)
+                    ) {
+                        append("█")
                     }
                 },
                 fontFamily = FontFamily.Monospace,
@@ -2643,10 +2673,10 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
                                     withStyle(SpanStyle(color = Color(0xFF8AE234), fontWeight = FontWeight.SemiBold)) { append("Streaming embedded lyrics...") }
                                 }
                             }
-                            if (isLatestLog && cursorVisible) {
-                                withStyle(SpanStyle(color = Color.White)) {
-                                    append("█")
-                                }
+                            withStyle(
+                                SpanStyle(color = if (isLatestLog && cursorVisible) Color.White else Color.Transparent)
+                            ) {
+                                append("█")
                             }
                         },
                         fontFamily = FontFamily.Monospace,
@@ -2726,10 +2756,10 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
                                 ) {
                                     append(line.text.substring(0, typedCharsCount))
                                 }
-                                if (cursorVisible) {
-                                    withStyle(SpanStyle(color = activeColor)) {
-                                        append("█")
-                                    }
+                                withStyle(
+                                    SpanStyle(color = if (cursorVisible) activeColor else Color.Transparent)
+                                ) {
+                                    append("█")
                                 }
                             },
                             fontFamily = FontFamily.Monospace,
@@ -2739,7 +2769,12 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
                         )
                     } else {
                         Text(
-                            text = line.text,
+                            text = buildAnnotatedString {
+                                append(line.text)
+                                withStyle(SpanStyle(color = Color.Transparent)) {
+                                    append("█")
+                                }
+                            },
                             fontFamily = FontFamily.Monospace,
                             fontSize = 15.sp,
                             lineHeight = 24.sp,
@@ -2767,10 +2802,10 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
                                 withStyle(SpanStyle(color = Color.White)) {
                                     append("$ $rmCommandTyped")
                                 }
-                                if (!showRmOutput && cursorVisible) {
-                                    withStyle(SpanStyle(color = Color.White)) {
-                                        append("█")
-                                    }
+                                withStyle(
+                                    SpanStyle(color = if (!showRmOutput && cursorVisible) Color.White else Color.Transparent)
+                                ) {
+                                    append("█")
                                 }
                             },
                             fontFamily = FontFamily.Monospace,
