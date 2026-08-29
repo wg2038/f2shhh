@@ -2077,17 +2077,19 @@ fun AboutScreen(
                         }
                     }
 
-                    // Scheme 2: Inline TTY expansion animation
+                    // Journal-style unlock: each tap advances a systemd user session
+                    // (Starting -> Child belongs -> Started), and the seventh tap shows
+                    // the arriving shell prompt right before the full terminal opens.
                     AnimatedVisibility(
                         visible = clickCount >= 4,
                         enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
                         exit = shrinkVertically(animationSpec = tween(300)) + fadeOut()
                     ) {
                         val statusText = when (clickCount) {
-                            4 -> "> [4/7] Probing /dev/ttyS0..."
-                            5 -> "> [5/7] Loading Ubuntu 26.04 kernel..."
-                            6 -> "> [6/7] Spawning shell session..."
-                            else -> "> [7/7] ACCESS GRANTED. Launching TTY1..."
+                            4 -> "systemd[1055]: Starting coralsea-cli.service..."
+                            5 -> "systemd[1055]: coralsea-cli.service: Child 2107 belongs to coralsea-cli.service."
+                            6 -> "systemd[1055]: Started coralsea-cli.service."
+                            else -> "cicada@ubuntu:~$"
                         }
                         val statusColor = if (clickCount >= 7) Color(0xFF8AE234) else Color(0xFF729FCF)
 
