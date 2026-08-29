@@ -102,6 +102,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.random.Random
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -2519,6 +2520,26 @@ fun EasterEggTerminalScreen(
         SimpleDateFormat("EEE MMM d hh:mm:ss a 'CST' yyyy", Locale.US).format(Date())
     }
 
+    // landscape-sysinfo gauges are re-rolled per visit so the box feels live on repeat
+    // runs; disk usage and the wlan0 IP stay fixed because the ssh disconnect message
+    // after the rm sequence echoes that IP.
+    val motdSysInfo = remember {
+        fun load(v: Float) = String.format(Locale.US, "%.2f", v)
+        val base = 0.08f + Random.nextFloat() * 0.35f
+        val mem = 45 + Random.nextInt(26)
+        val swap = if (Random.nextInt(100) < 85) 0 else 1 + Random.nextInt(5)
+        val temp = 31.0f + Random.nextFloat() * 7.5f
+        val procs = 280 + Random.nextInt(140)
+        "  System load: ${load(base * 1.2f)} ${load(base)} ${load(base * 0.85f)}\n" +
+                "  Usage of /: 62.4% of 238.05GB\n" +
+                "  Memory usage: $mem%\n" +
+                "  Swap usage: $swap%\n" +
+                "  Temperature: ${String.format(Locale.US, "%.1f", temp)} C\n" +
+                "  Processes: $procs\n" +
+                "  Users logged in: 1\n" +
+                "  IPv4 (wlan0): 192.168.1.23"
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -2538,14 +2559,7 @@ fun EasterEggTerminalScreen(
                         " * Management:     https://landscape.canonical.com\n" +
                         " * Support:        https://ubuntu.com/pro\n\n" +
                         "System information as of $motdDate\n\n" +
-                        "  System load: 0.42 0.31 0.27\n" +
-                        "  Usage of /: 62.4% of 238.05GB\n" +
-                        "  Memory usage: 58%\n" +
-                        "  Swap usage: 0%\n" +
-                        "  Temperature: 33.5 C\n" +
-                        "  Processes: 342\n" +
-                        "  Users logged in: 1\n" +
-                        "  IPv4 (wlan0): 192.168.1.23\n\n" +
+                        "$motdSysInfo\n\n" +
                         "0 updates can be applied immediately.\n\n" +
                         "Last login: Fri Aug 28 11:24:07 PM CST 2026 from 192.168.1.5\n",
                 fontFamily = FontFamily.Monospace,
