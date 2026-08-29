@@ -12,7 +12,6 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.AudioAttributes
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -122,14 +121,8 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         Log.i(TAG, "onCreate")
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-            vibratorManager?.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-        }
-        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        vibrator = (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+        prefs = getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE)
 
         gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -142,14 +135,14 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         Log.i(TAG, "Active orientation: ${activeOrientationSensor?.name}, Gyro: ${gyroscopeSensor?.name}, Proximity: ${proximitySensor?.name} (Optical: $hasOpticalProximity)")
 
         // Restore persisted state if service was killed and restarted.
-        if (prefs.getBoolean(KEY_DND_ACTIVE, false)) {
+        if (prefs.getBoolean(PrefsKeys.KEY_DND_ACTIVE, false)) {
             val systemDndStillOn = notifManager.isNotificationPolicyAccessGranted &&
                     notifManager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL
             if (systemDndStillOn) {
                 previousInterruptionFilter = prefs.getInt(
-                    KEY_PREV_INTERRUPTION_FILTER, NotificationManager.INTERRUPTION_FILTER_ALL
+                    PrefsKeys.KEY_PREV_INTERRUPTION_FILTER, NotificationManager.INTERRUPTION_FILTER_ALL
                 )
-                wasDndActivatedByService = prefs.getBoolean(KEY_WAS_DND_ACTIVATED_BY_SERVICE, false)
+                wasDndActivatedByService = prefs.getBoolean(PrefsKeys.KEY_WAS_DND_ACTIVATED_BY_SERVICE, false)
                 _isDndActive.value = true
                 _isFlippedDown.value = true
             } else {
@@ -174,7 +167,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.i(TAG, "onStartCommand")
-        startForeground(NOTIFICATION_ID, createForegroundNotification())
+        startForeground(NOTIFICATION_ID, buildNotification(active = _isDndActive.value))
 
         // registerSensors() removes any pending debounce runnable; a stranded
         // pendingTargetState here would permanently block future flip detection.
@@ -187,7 +180,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     override fun onDestroy() {
         unregisterAllSensors()
         restoreDndIfNeeded()
-        handler.removeCallbacks(debounceRunnable)
         pendingTargetState = TargetFlipState.NONE
         _isRunning.value = false
         _isFlippedDown.value = false
@@ -383,7 +375,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             updateNotification(active = true)
 
             // 3. Perform lock screen after haptic has been executed
-            val autoLockPref = prefs.getBoolean(KEY_AUTO_LOCK_SCREEN, true)
+            val autoLockPref = prefs.getBoolean(PrefsKeys.KEY_AUTO_LOCK_SCREEN, true)
             val accessibilityEnabled = FlipLockAccessibilityService.isAccessibilityServiceEnabled(this)
 
             if (autoLockPref && accessibilityEnabled) {
@@ -446,15 +438,14 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     private fun persistState(active: Boolean) {
         prefs.edit()
-            .putBoolean(KEY_DND_ACTIVE, active)
-            .putInt(KEY_PREV_INTERRUPTION_FILTER, previousInterruptionFilter)
-            .putBoolean(KEY_WAS_DND_ACTIVATED_BY_SERVICE, wasDndActivatedByService)
+            .putBoolean(PrefsKeys.KEY_DND_ACTIVE, active)
+            .putInt(PrefsKeys.KEY_PREV_INTERRUPTION_FILTER, previousInterruptionFilter)
+            .putBoolean(PrefsKeys.KEY_WAS_DND_ACTIVATED_BY_SERVICE, wasDndActivatedByService)
             .apply()
     }
 
     // ── Fixed Default Dual-Pulse Haptic ─────────────────────────────────────
 
-    @Suppress("DEPRECATION")
     private fun triggerFlipDownHaptic() {
         val vib = vibrator ?: return
         if (!vib.hasVibrator()) return
@@ -464,9 +455,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             .build()
 
         // Double pulse: Solid & Distinct "咚 - 咚"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-            vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_THUD)
-        ) {
+        if (vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_THUD)) {
             val composition = VibrationEffect.startComposition()
                 .addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, 1.0f)
                 .addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, 1.0f, 65)
@@ -479,7 +468,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         }
     }
 
-    @Suppress("DEPRECATION")
     private fun triggerFlipUpHaptic() {
         val vib = vibrator ?: return
         if (!vib.hasVibrator()) return
@@ -489,9 +477,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             .build()
 
         // Subtle single click feedback on flip-up
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-            vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_CLICK)
-        ) {
+        if (vib.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_CLICK)) {
             val composition = VibrationEffect.startComposition()
                 .addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, 1.0f)
                 .compose()
@@ -554,8 +540,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         notifManager.createNotificationChannel(channel)
     }
 
-    private fun createForegroundNotification(): Notification = buildNotification(active = false)
-
     private fun updateNotification(active: Boolean) {
         notifManager.notify(NOTIFICATION_ID, buildNotification(active = active))
     }
@@ -594,15 +578,9 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         const val NOTIFICATION_ID = 1001
         private const val TAG = "FlipToShhh"
 
-        private const val PREFS_NAME = "flip_to_shhh_prefs"
-        private const val KEY_DND_ACTIVE = "dnd_active"
-        private const val KEY_PREV_INTERRUPTION_FILTER = "prev_interruption_filter"
-        private const val KEY_WAS_DND_ACTIVATED_BY_SERVICE = "was_dnd_activated_by_service"
-        const val KEY_AUTO_LOCK_SCREEN = "auto_lock_screen"
-
         // Fixed 2.0-second debounce wait time for flip-down
-        const val FIXED_DEBOUNCE_DOWN_MS = 2000L
-        const val DEBOUNCE_UP_MS = 300L
+        private const val FIXED_DEBOUNCE_DOWN_MS = 2000L
+        private const val DEBOUNCE_UP_MS = 300L
 
         // Real-world calibrated face-down flatness thresholds (supports camera bumps and case elevation):
         // Normal gravity magnitude = 9.81 m/s^2.

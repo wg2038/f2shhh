@@ -35,33 +35,6 @@ object AppIcons {
         }.build()
     }
 
-    val Smartphone: ImageVector by lazy {
-        ImageVector.Builder(
-            name = "Smartphone",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f
-        ).path(fill = SolidColor(Color.Black)) {
-            moveTo(17f, 1.01f)
-            lineTo(7f, 1f)
-            curveTo(5.9f, 1f, 5f, 1.9f, 5f, 3f)
-            lineTo(5f, 21f)
-            curveTo(5f, 22.1f, 5.9f, 23f, 7f, 23f)
-            lineTo(17f, 23f)
-            curveTo(18.1f, 23f, 19f, 22.1f, 19f, 21f)
-            lineTo(19f, 3f)
-            curveTo(19f, 1.9f, 18.1f, 1.01f, 17f, 1.01f)
-            close()
-            moveTo(17f, 19f)
-            lineTo(7f, 19f)
-            lineTo(7f, 5f)
-            lineTo(17f, 5f)
-            lineTo(17f, 19f)
-            close()
-        }.build()
-    }
-
     val Bedtime: ImageVector by lazy {
         ImageVector.Builder(
             name = "Bedtime",
@@ -312,33 +285,6 @@ object AppIcons {
             curveTo(8.9f, 4.29f, 10.29f, 2.9f, 12f, 2.9f)
             curveTo(13.71f, 2.9f, 15.1f, 4.29f, 15.1f, 6f)
             verticalLineToRelative(2f)
-            close()
-        }.build()
-    }
-
-    val Notifications: ImageVector by lazy {
-        ImageVector.Builder(
-            name = "Notifications",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f
-        ).path(fill = SolidColor(Color.Black)) {
-            moveTo(12f, 22f)
-            curveTo(13.1f, 22f, 14f, 21.1f, 14f, 20f)
-            horizontalLineToRelative(-4f)
-            curveTo(10f, 21.1f, 10.89f, 22f, 12f, 22f)
-            close()
-            moveTo(18f, 16f)
-            verticalLineToRelative(-5f)
-            curveTo(18f, 7.93f, 15.36f, 5.36f, 12f, 4.5f)
-            curveTo(8.64f, 5.36f, 6f, 7.92f, 6f, 11f)
-            verticalLineToRelative(5f)
-            lineToRelative(-2f, 2f)
-            verticalLineToRelative(1f)
-            horizontalLineToRelative(16f)
-            verticalLineToRelative(-1f)
-            lineToRelative(-2f, -2f)
             close()
         }.build()
     }

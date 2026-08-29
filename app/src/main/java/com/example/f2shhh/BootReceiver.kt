@@ -21,9 +21,9 @@ class BootReceiver : BroadcastReceiver() {
             action == "android.intent.action.QUICKBOOT_POWERON" ||
             action == "com.htc.intent.action.QUICKBOOT_POWERON"
         ) {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val autoStartEnabled = prefs.getBoolean(KEY_AUTO_START_BOOT, true)
-            val isUserEnabled = prefs.getBoolean(KEY_SERVICE_USER_ENABLED, true)
+            val prefs = context.getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE)
+            val autoStartEnabled = prefs.getBoolean(PrefsKeys.KEY_AUTO_START_BOOT, true)
+            val isUserEnabled = prefs.getBoolean(PrefsKeys.KEY_SERVICE_USER_ENABLED, true)
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             if (!autoStartEnabled) {
@@ -53,8 +53,5 @@ class BootReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "BootReceiver"
-        private const val PREFS_NAME = "flip_to_shhh_prefs"
-        const val KEY_AUTO_START_BOOT = "auto_start_on_boot"
-        const val KEY_SERVICE_USER_ENABLED = "service_user_enabled"
     }
 }

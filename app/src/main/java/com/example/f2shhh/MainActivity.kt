@@ -12,11 +12,9 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -76,6 +74,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -108,11 +107,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
-private const val PREFS_NAME = "flip_to_shhh_prefs"
-private const val KEY_AUTO_START_BOOT = "auto_start_on_boot"
-private const val KEY_AUTO_LOCK_SCREEN = "auto_lock_screen"
-private const val KEY_SERVICE_USER_ENABLED = "service_user_enabled"
 
 // ════════════════════════════════════════════════════════════════════════
 // Samsung One UI Typography Standard Specs
@@ -180,53 +174,24 @@ object AppStrings {
 
         return when (key) {
             "app_name" -> "Flip to Shhh"
-            "master_title" -> if (isEng) "Flip to Shhh" else if (isTrad) "翻轉靜音" else "翻转静音"
-            "header_sub_running" -> if (isEng) "Gesture detection ready · Flip phone to mute" else if (isTrad) "手勢偵測就緒 · 翻轉手機開啟勿擾" else "手势检测就绪 · 翻转手机开启勿扰"
-            "header_sub_dnd" -> if (isEng) "Do Not Disturb active" else if (isTrad) "勿擾模式已開啟" else "勿扰模式已开启"
-            "header_sub_stopped" -> if (isEng) "Gesture detection paused" else if (isTrad) "手勢偵測已暫停" else "手势检测已暂停"
-            "status_not_running" -> if (isEng) "Service Stopped" else if (isTrad) "服務未啟動" else "服务未启动"
-            "status_flipped_dnd" -> if (isEng) "Face Down · DND Active" else if (isTrad) "已翻轉 · 勿擾中" else "已翻转 · 勿扰中"
-            "status_running" -> if (isEng) "Do Not Disturb" else if (isTrad) "勿擾模式" else "勿扰模式"
-            "master_sub_running" -> if (isEng) "Listening · Flip face down to mute" else if (isTrad) "服務監聽中 · 翻轉開啟勿擾" else "服务监听中 · 翻转开启勿扰"
-            "master_sub_stopped" -> if (isEng) "Tap to start gesture detection service" else if (isTrad) "點擊啟動手勢偵測服務" else "点击启动手势检测服务"
-            "hero_dnd_pill" -> if (isEng) "DND Active" else if (isTrad) "勿擾中" else "勿扰中"
 
-            // 1. Core Permissions Panel Header & Fold Buttons
-            "perm_header_ready", "core_permissions_ready" -> if (isEng) "Core permissions ready" else if (isTrad) "核心權限已就緒" else "核心权限已就绪"
-            "perm_header_need" -> if (isEng) "Action required" else if (isTrad) "需要授權" else "需要授权"
-            "perm_expand" -> if (isEng) "Expand" else if (isTrad) "展開" else "展开"
-            "perm_collapse" -> if (isEng) "Collapse" else if (isTrad) "收起" else "收起"
-
-            // 2. Permission Items & Statuses
             "perm_dnd_title" -> if (isEng) "Do Not Disturb Access" else if (isTrad) "勿擾模式存取權限" else "勿扰模式权限"
-            "perm_dnd_granted" -> if (isEng) "Granted" else if (isTrad) "已授權" else "已授权"
-            "perm_dnd_missing", "perm_dnd_required" -> if (isEng) "Tap to grant DND access" else if (isTrad) "未授權 · 點擊前往設定" else "未授权 · 点击前往设置"
+            "perm_dnd_required" -> if (isEng) "Tap to grant DND access" else if (isTrad) "未授權 · 點擊前往設定" else "未授权 · 点击前往设置"
             "perm_dnd_required_banner" -> if (isEng) "DND permission required to enable mute" else if (isTrad) "勿擾模式權限未授予，無法開啟靜音" else "勿扰模式权限未授予，无法开启静音"
             "perm_dnd_desc" -> if (isEng) "Allow app to automatically toggle DND & mute" else if (isTrad) "允許應用程式自動開啟勿擾模式" else "允许应用自动开启勿扰模式"
 
             "perm_battery_title" -> if (isEng) "Background Battery Optimization" else if (isTrad) "背景電池最佳化" else "后台电池优化"
-            "perm_battery_granted" -> if (isEng) "Battery optimization ignored" else if (isTrad) "已忽略電池最佳化" else "已忽略电池优化"
-            "perm_battery_missing", "perm_battery_required" -> if (isEng) "Tap to disable optimization" else if (isTrad) "未忽略 · 點擊允許背景執行" else "未忽略 · 点击允许后台运行"
             "perm_battery_desc" -> if (isEng) "Keep service running stably in background" else if (isTrad) "允許背景無限制執行，避免被系統清除" else "允许后台无限制运行，避免被系统清理"
 
-            "perm_accessibility_title", "perm_access_title" -> if (isEng) "Accessibility Lock Service" else if (isTrad) "無障礙螢幕鎖定服務" else "无障碍锁屏服务"
-            "perm_accessibility_granted", "perm_access_granted" -> if (isEng) "Granted" else if (isTrad) "已授權" else "已授权"
-            "perm_accessibility_missing", "perm_access_required" -> if (isEng) "Tap to enable accessibility" else if (isTrad) "未授權 · 點擊開啟無障礙" else "未授权 · 点击开启无障碍"
-            "perm_access_desc" -> if (isEng) "Lock screen simultaneously when muted" else if (isTrad) "翻轉靜音時同步關閉螢幕並鎖定" else "翻转静音时自动熄屏锁屏"
+            "perm_access_title" -> if (isEng) "Accessibility Lock Service" else if (isTrad) "無障礙螢幕鎖定服務" else "无障碍锁屏服务"
 
-            "perm_notification_title", "perm_notif_optional_title" -> if (isEng) "Notification Access" else if (isTrad) "通知權限" else "通知权限"
-            "perm_notification_granted" -> if (isEng) "Granted" else if (isTrad) "已授權" else "已授权"
-            "perm_notification_missing", "perm_notif_optional_sub" -> if (isEng) "Disabled · Silent operation" else if (isTrad) "未開啟 · 適合極簡靜音執行" else "未开启 · 适合极简静默运行"
-            "perm_notif_sub" -> if (isEng) "Display foreground service status notification" else if (isTrad) "顯示前景服務執行狀態" else "显示前台服务运行状态"
             "grant_btn" -> if (isEng) "Grant" else if (isTrad) "去授權" else "去授权"
 
             // 3. Settings Panel & Options
-            "setting_title", "settings_title" -> if (isEng) "Settings" else if (isTrad) "設定" else "设置"
-            "setting_autostart", "autostart_title" -> if (isEng) "Auto-start on Boot" else if (isTrad) "開機自動啟動" else "开机自动启动"
-            "setting_autostart_sub", "autostart_sub" -> if (isEng) "Start service automatically after device reboots" else if (isTrad) "裝置重新開機後自動啟動服務" else "设备开机后自动拉起服务"
-            "setting_lock", "autolock_title" -> if (isEng) "Flip to Lock Screen" else if (isTrad) "翻轉自動鎖定螢幕" else "翻转自动锁屏"
-            "setting_lock_sub", "autolock_sub" -> if (isEng) "Lock screen simultaneously when muted" else if (isTrad) "翻轉開啟勿擾時同步關閉螢幕並鎖定" else "翻转开启勿扰时同步熄屏锁屏"
-            "setting_language", "lang_title" -> if (isEng) "Language" else if (isTrad) "語言" else "语言"
+            "settings_title" -> if (isEng) "Settings" else if (isTrad) "設定" else "设置"
+            "autostart_title" -> if (isEng) "Auto-start on Boot" else if (isTrad) "開機自動啟動" else "开机自动启动"
+            "autolock_title" -> if (isEng) "Flip to Lock Screen" else if (isTrad) "翻轉自動鎖定螢幕" else "翻转自动锁屏"
+            "lang_title" -> if (isEng) "Language" else if (isTrad) "語言" else "语言"
             "setting_about", "about_app_title" -> if (isEng) "About" else if (isTrad) "關於" else "关于"
 
             "group_permissions" -> if (isEng) "Core Permissions" else if (isTrad) "核心權限" else "核心权限"
@@ -238,8 +203,6 @@ object AppStrings {
             "hero_tap_to_start" -> if (isEng) "Tap to Start" else if (isTrad) "點擊啟動服務" else "点击启动服务"
             "hero_running_title" -> if (isEng) "Flip to Shhh Ready" else if (isTrad) "翻轉靜音已就緒" else "翻转静音已就绪"
             "hero_dnd_active_title" -> if (isEng) "Do Not Disturb Active" else if (isTrad) "勿擾模式已生效" else "勿扰模式已生效"
-            "hero_tag_running" -> if (isEng) "⚡ Ultra-low power · Dual-track active" else if (isTrad) "⚡ 超低功耗 · 雙軌防誤觸監測中" else "⚡ 超低功耗 · 双轨防抖监测中"
-            "hero_tag_stopped" -> if (isEng) "⚪ Service stopped" else if (isTrad) "⚪ 服務未啟動" else "⚪ 服务未启动"
 
             "theme_title" -> if (isEng) "Theme Mode" else if (isTrad) "主題模式" else "外观与主题"
             "sys_default" -> if (isEng) "System" else if (isTrad) "跟隨系統" else "跟随系统"
@@ -272,7 +235,6 @@ object AppStrings {
             "onboarding_start_btn" -> if (isEng) "Get Started" else if (isTrad) "開始使用" else "开始使用"
             "onboarding_setup_required_btn" -> if (isEng) "Please set required permissions" else if (isTrad) "請先完成權限設定" else "请先完成权限设置"
             "btn_cancel" -> if (isEng) "Cancel" else if (isTrad) "取消" else "取消"
-            "sensor_not_supported" -> if (isEng) "Orientation sensor missing on this device" else if (isTrad) "此裝置缺少方向感應器，無法使用翻轉靜音" else "此设备缺少方向传感器，无法使用翻转静音"
 
             else -> key
         }
@@ -294,17 +256,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             val prefs = remember {
-                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                context.getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE)
             }
-            var themeMode by rememberSaveable { mutableStateOf(prefs.getInt("theme_mode", 0)) }
-            var languageMode by rememberSaveable { mutableStateOf(prefs.getInt("language_mode", 0)) }
+            var themeMode by rememberSaveable { mutableStateOf(prefs.getInt(PrefsKeys.KEY_THEME_MODE, 0)) }
+            var languageMode by rememberSaveable { mutableStateOf(prefs.getInt(PrefsKeys.KEY_LANGUAGE_MODE, 0)) }
             val notifPermissionLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) { }
 
             FlipToShhhTheme(themeMode = themeMode) {
                 var onboardingComplete by remember {
-                    mutableStateOf(prefs.getBoolean(KEY_ONBOARDING_COMPLETE, false))
+                    mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_ONBOARDING_COMPLETE, false))
                 }
 
                 AnimatedContent(
@@ -319,8 +281,8 @@ class MainActivity : ComponentActivity() {
                             languageMode = languageMode,
                             onComplete = {
                                 prefs.edit()
-                                    .putBoolean(KEY_ONBOARDING_COMPLETE, true)
-                                    .putBoolean(KEY_SERVICE_USER_ENABLED, true)
+                                    .putBoolean(PrefsKeys.KEY_ONBOARDING_COMPLETE, true)
+                                    .putBoolean(PrefsKeys.KEY_SERVICE_USER_ENABLED, true)
                                     .apply()
                                 onboardingComplete = true
                             }
@@ -335,7 +297,7 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 notifPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                             }
-                            val isUserEnabled = prefs.getBoolean(KEY_SERVICE_USER_ENABLED, true)
+                            val isUserEnabled = prefs.getBoolean(PrefsKeys.KEY_SERVICE_USER_ENABLED, true)
                             if (isUserEnabled && checkDndPermission(context) && !FlipToShhhService.isRunning.value) {
                                 startFlipService(context)
                             }
@@ -359,44 +321,6 @@ class MainActivity : ComponentActivity() {
 // ════════════════════════════════════════════════════════════════════════
 // Theme — One UI inspired scheme
 // ════════════════════════════════════════════════════════════════════════
-
-private val CrispLightColorScheme = lightColorScheme(
-    primary = Color(0xFF1E56A0),            // One UI Royal Blue
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFD6E4FF),
-    onPrimaryContainer = Color(0xFF001B3D),
-    secondary = Color(0xFF475569),          // Slate gray
-    onSecondary = Color.White,
-    background = Color(0xFFFAFAFA),         // One UI light porcelain background (#FAFAFA)
-    onBackground = Color(0xFF0F172A),       // Deep obsidian text (#0F172A)
-    surface = Color(0xFFFFFFFF),            // Pure white card surface (#FFFFFF)
-    onSurface = Color(0xFF0F172A),
-    surfaceContainerLow = Color(0xFFFFFFFF),// Pure white card container
-    surfaceContainerHigh = Color(0xFFF1F5F9),// Light slate container for pills/buttons
-    surfaceContainerHighest = Color(0xFFE2E8F0),
-    onSurfaceVariant = Color(0xFF475569),   // Slate gray
-    outline = Color(0xFFE2E8F0),
-    outlineVariant = Color(0xFFE2E8F0)
-)
-
-private val OneUiDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFA8C8FF),
-    onPrimary = Color(0xFF003062),
-    primaryContainer = Color(0xFF004689),
-    onPrimaryContainer = Color(0xFFD6E3FF),
-    secondary = Color(0xFFBBC7DB),
-    onSecondary = Color(0xFF253140),
-    background = Color(0xFF111318),
-    onBackground = Color(0xFFE2E2E9),
-    surface = Color(0xFF191C22),
-    onSurface = Color(0xFFE2E2E9),
-    surfaceContainerLow = Color(0xFF1D2026),
-    surfaceContainerHigh = Color(0xFF282B32),
-    surfaceContainerHighest = Color(0xFF33363E),
-    onSurfaceVariant = Color(0xFFC3C6CF),
-    outline = Color(0xFF8D9199),
-    outlineVariant = Color(0xFF43474E)
-)
 
 private fun extractSystemSeedColor(context: Context): Color? {
     // 1. Try reading system theme customization overlay settings (Samsung One UI, AOSP, Pixel)
@@ -552,10 +476,8 @@ fun FlipToShhhTheme(
         val seed = systemSeedColor
         if (seed != null) {
             dynamicColorSchemeFromSeed(seed, darkTheme)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         } else {
-            if (darkTheme) OneUiDarkColorScheme else CrispLightColorScheme
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
     }
 
@@ -578,7 +500,7 @@ fun OnboardingScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE) }
 
     val pagerState = rememberPagerState(pageCount = { 2 })
 
@@ -829,7 +751,7 @@ fun FlipToShhhScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE) }
 
     val isServiceRunning by FlipToShhhService.isRunning.collectAsState()
     val isFlippedDown by FlipToShhhService.isFlippedDown.collectAsState()
@@ -864,7 +786,7 @@ fun FlipToShhhScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 coroutineScope.launch {
                     updatePermissions()
-                    onLanguageModeChanged(prefs.getInt("language_mode", 0))
+                    onLanguageModeChanged(prefs.getInt(PrefsKeys.KEY_LANGUAGE_MODE, 0))
                 }
             }
         }
@@ -1008,11 +930,11 @@ fun FlipToShhhScreen(
                                                 if (!hasDndPermission) {
                                                     showPermissionDialog = true
                                                 } else {
-                                                    prefs.edit().putBoolean(KEY_SERVICE_USER_ENABLED, true).apply()
+                                                    prefs.edit().putBoolean(PrefsKeys.KEY_SERVICE_USER_ENABLED, true).apply()
                                                     startFlipService(context)
                                                 }
                                             } else {
-                                                prefs.edit().putBoolean(KEY_SERVICE_USER_ENABLED, false).apply()
+                                                prefs.edit().putBoolean(PrefsKeys.KEY_SERVICE_USER_ENABLED, false).apply()
                                                 stopFlipService(context)
                                             }
                                         }
@@ -1423,7 +1345,9 @@ fun <T> OptionPickerSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() },
         contentWindowInsets = { WindowInsets.navigationBars }
     ) {
-        val darkTheme = isSystemInDarkTheme()
+        // ModalBottomSheet hosts its own dialog window; its bar appearance must follow the
+        // app theme, which can disagree with the system theme the fallback would read.
+        val darkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
         SystemBarsColorEffect(darkTheme = darkTheme)
 
         Column(
@@ -1497,15 +1421,15 @@ fun SettingsBottomSheet(
 
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    var themeMode by remember { mutableStateOf(prefs.getInt("theme_mode", 0)) }
+    var themeMode by remember { mutableStateOf(prefs.getInt(PrefsKeys.KEY_THEME_MODE, 0)) }
     var showLanguagePicker by remember { mutableStateOf(false) }
 
-    var autoStartEnabled by remember { mutableStateOf(prefs.getBoolean(KEY_AUTO_START_BOOT, true)) }
-    // Keep the default identical to FlipToShhhService's KEY_AUTO_LOCK_SCREEN default (true).
-    var autoLockEnabled by remember { mutableStateOf(prefs.getBoolean(KEY_AUTO_LOCK_SCREEN, true)) }
+    var autoStartEnabled by remember { mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_AUTO_START_BOOT, true)) }
+    // Keep the default identical to FlipToShhhService's PrefsKeys.KEY_AUTO_LOCK_SCREEN default (true).
+    var autoLockEnabled by remember { mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_AUTO_LOCK_SCREEN, true)) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -1638,7 +1562,7 @@ fun SettingsBottomSheet(
                                     onCheckedChange = { enabled ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         autoStartEnabled = enabled
-                                        prefs.edit().putBoolean(KEY_AUTO_START_BOOT, enabled).apply()
+                                        prefs.edit().putBoolean(PrefsKeys.KEY_AUTO_START_BOOT, enabled).apply()
                                     }
                                 )
                             }
@@ -1670,7 +1594,7 @@ fun SettingsBottomSheet(
                                     onCheckedChange = { enabled ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         autoLockEnabled = enabled
-                                        prefs.edit().putBoolean(KEY_AUTO_LOCK_SCREEN, enabled).apply()
+                                        prefs.edit().putBoolean(PrefsKeys.KEY_AUTO_LOCK_SCREEN, enabled).apply()
                                         if (enabled && !FlipLockAccessibilityService.isAccessibilityServiceEnabled(context)) {
                                             onGrantAccessibility()
                                         }
@@ -1714,7 +1638,7 @@ fun SettingsBottomSheet(
                                     onSelect = { mode ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         themeMode = mode
-                                        prefs.edit().putInt("theme_mode", mode).apply()
+                                        prefs.edit().putInt(PrefsKeys.KEY_THEME_MODE, mode).apply()
                                         onThemeModeSelected(mode)
                                     }
                                 )
@@ -1823,7 +1747,7 @@ fun SettingsBottomSheet(
                 options = langOptions,
                 selectedKey = languageMode,
                 onSelect = { mode ->
-                    prefs.edit().putInt("language_mode", mode).apply()
+                    prefs.edit().putInt(PrefsKeys.KEY_LANGUAGE_MODE, mode).apply()
                     onLanguageModeSelected(mode)
                 },
                 onDismiss = { showLanguagePicker = false }
@@ -2338,14 +2262,6 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
         }
     }
 
-    LaunchedEffect(lyrics) {
-        Log.d(
-            "EasterEgg",
-            "LRC lines=${lyrics.size} first=${lyrics.firstOrNull()?.timestampMs} " +
-                "last=${lyrics.lastOrNull()?.timestampMs} offset=$LYRICS_GLOBAL_OFFSET_MS"
-        )
-    }
-
     var currentPosMs by remember { mutableLongStateOf(0L) }
     var totalDurationMs by remember { mutableLongStateOf(0L) }
     var mediaPlayerInstance by remember { mutableStateOf<MediaPlayer?>(null) }
@@ -2802,18 +2718,6 @@ fun EasterEggTerminalScreen(onExit: () -> Unit) {
                         // for window/(len+1) ms — clearly after the first sung syllable.
                         val typedCharsCount = if (rawElapsedInLine < 0L) 0 else
                             (progress * (line.text.length - 1)).toInt().coerceIn(0, line.text.length - 1) + 1
-
-                        val lastLoggedCharCount = remember(line.timestampMs) { mutableIntStateOf(-1) }
-                        SideEffect {
-                            if (typedCharsCount != lastLoggedCharCount.intValue) {
-                                lastLoggedCharCount.intValue = typedCharsCount
-                                Log.d(
-                                    "EasterEgg",
-                                    "chars=$typedCharsCount/${line.text.length} ts=${line.timestampMs} " +
-                                        "pos=${effectivePosState.value} delay=$LYRIC_TYPE_DELAY_MS"
-                                )
-                            }
-                        }
 
                         Text(
                             text = buildAnnotatedString {
