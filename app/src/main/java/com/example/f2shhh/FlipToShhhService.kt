@@ -116,6 +116,16 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
+    // Language switched in the app while the service is up: rebuild the channel name
+    // and the foreground notification right away instead of waiting for the next
+    // flip event or service restart.
+    private val languagePrefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == PrefsKeys.KEY_LANGUAGE_MODE) {
+            createNotificationChannel()
+            updateNotification(active = _isDndActive.value)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate")
@@ -123,6 +133,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         vibrator = (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
         prefs = getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener(languagePrefListener)
 
         gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -178,6 +189,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     override fun onDestroy() {
+        prefs.unregisterOnSharedPreferenceChangeListener(languagePrefListener)
         unregisterAllSensors()
         restoreDndIfNeeded()
         pendingTargetState = TargetFlipState.NONE
@@ -491,7 +503,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     // ── Notifications ──────────────────────────────────────────────────────
 
     private fun getLocalizedText(key: String): String {
-        val langMode = if (::prefs.isInitialized) prefs.getInt("language_mode", 0) else 0
+        val langMode = if (::prefs.isInitialized) prefs.getInt(PrefsKeys.KEY_LANGUAGE_MODE, 0) else 0
         val isTrad: Boolean
         val isEng: Boolean
         if (langMode == 0) {
@@ -502,7 +514,8 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
                 isEng = false
                 isTrad = country.equals("TW", ignoreCase = true) ||
                          country.equals("HK", ignoreCase = true) ||
-                         country.equals("MO", ignoreCase = true)
+                         country.equals("MO", ignoreCase = true) ||
+                         locale.script.equals("Hant", ignoreCase = true)
             } else {
                 isEng = true
                 isTrad = false
