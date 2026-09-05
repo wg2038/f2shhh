@@ -50,6 +50,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -104,6 +106,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -155,26 +158,9 @@ object OneUiTypography {
 
 object AppStrings {
     fun get(context: Context, key: String, langMode: Int): String {
-        val isTrad: Boolean
-        val isEng: Boolean
-
-        if (langMode == 0) {
-            val locale = context.resources.configuration.locales.get(0)
-            val lang = locale.language
-            val country = locale.country
-            if (lang.startsWith("zh")) {
-                isEng = false
-                isTrad = country.equals("TW", ignoreCase = true) ||
-                         country.equals("HK", ignoreCase = true) ||
-                         country.equals("MO", ignoreCase = true)
-            } else {
-                isEng = true
-                isTrad = false
-            }
-        } else {
-            isEng = (langMode == 3)
-            isTrad = (langMode == 2)
-        }
+        val lang = Localization.resolve(context, langMode)
+        val isEng = lang == AppLanguage.ENGLISH
+        val isTrad = lang == AppLanguage.TRADITIONAL
 
         return when (key) {
             "app_name" -> "Flip to Shhh"
@@ -269,7 +255,9 @@ class MainActivity : ComponentActivity() {
             ) { }
             // Whether the easter-egg terminal is forcing dark system bars; hoisted here so
             // the theme re-applies the correct appearance the moment the terminal closes.
-            var terminalBarsDark by remember { mutableStateOf(false) }
+            // Saveable: a process-death restore may reopen the terminal, and the override
+            // must survive alongside it.
+            var terminalBarsDark by rememberSaveable { mutableStateOf(false) }
 
             FlipToShhhTheme(themeMode = themeMode, barsDarkOverride = terminalBarsDark) {
                 var onboardingComplete by remember {
@@ -711,7 +699,8 @@ fun OnboardingPermissionItem(
     onAction: () -> Unit
 ) {
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+    // Follow the ACTIVE app theme (which may override the system setting), not the system theme.
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val warningColor = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
     val warningBgColor = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB)
 
@@ -888,7 +877,8 @@ fun FlipToShhhScreen(
 
                                 // 2. Missing DND permission warning banner (only when DND not granted)
                                 if (!hasDndPermission) {
-                                    val isDark = isSystemInDarkTheme()
+                                    // Follow the ACTIVE app theme (which may override the system setting).
+                                    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Card(
                                         modifier = Modifier
@@ -963,8 +953,8 @@ fun FlipToShhhScreen(
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(16.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()))
-                            }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                         }
 
                         SettingsBottomSheet(
@@ -1442,6 +1432,7 @@ fun SettingsBottomSheet(
     if (!visible) return
 
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val haptic = LocalHapticFeedback.current
     val prefs = remember { context.getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -1452,6 +1443,21 @@ fun SettingsBottomSheet(
     var autoStartEnabled by remember { mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_AUTO_START_BOOT, true)) }
     // Keep the default identical to FlipToShhhService's PrefsKeys.KEY_AUTO_LOCK_SCREEN default (true).
     var autoLockEnabled by remember { mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_AUTO_LOCK_SCREEN, true)) }
+    // Flip-to-lock only takes effect while the accessibility service is actually enabled;
+    // re-check on every resume so the switch reflects reality after returning from Settings.
+    var accessibilityEnabled by remember {
+        mutableStateOf(FlipLockAccessibilityService.isAccessibilityServiceEnabled(context))
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                accessibilityEnabled = FlipLockAccessibilityService.isAccessibilityServiceEnabled(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -1612,7 +1618,9 @@ fun SettingsBottomSheet(
                                     )
                                 }
                                 Switch(
-                                    checked = autoLockEnabled,
+                                    // Effective state: the preference alone does nothing while
+                                    // the accessibility lock service is disabled.
+                                    checked = autoLockEnabled && accessibilityEnabled,
                                     onCheckedChange = { enabled ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         autoLockEnabled = enabled
@@ -2259,8 +2267,11 @@ private fun extractLyricsFromOgg(context: Context): String {
                     ((buffer[lenOffset + 2].toInt() and 0xFF) shl 16) or
                     ((buffer[lenOffset + 3].toInt() and 0xFF) shl 24)
                 } else 4096
-                val lyricsLen = (len - target.size).coerceIn(0, buffer.size - targetIndex - target.size)
-                String(buffer, targetIndex + target.size, lyricsLen, Charsets.UTF_8)
+                // A length outside [7, 1 MiB] means a misaligned match; bail out instead of
+                // swallowing OGG audio bytes as lyric text.
+                val lyricsLen = if (len >= target.size && len <= (1 shl 20)) len - target.size else -1
+                if (lyricsLen < 0 || targetIndex + target.size + lyricsLen > buffer.size) "" else
+                    String(buffer, targetIndex + target.size, lyricsLen, Charsets.UTF_8)
             } else ""
         }
     } catch (_: Exception) {
@@ -2325,11 +2336,9 @@ private fun TerminalPromptLine(command: String, cursorVisible: Boolean) {
 
 // neofetch snapshot: Host/CPU/RAM/Disk/Uptime come from the real device (no
 // permissions needed); OS/Kernel/DE stay in the Ubuntu fiction on purpose.
-@Composable
-private fun NeofetchBlock() {
-    val context = LocalContext.current
-    val info = remember {
-        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+// Collected off the main thread — /proc & /sys file reads and StatFs are disk I/O.
+private fun collectNeofetchInfo(context: Context): List<Pair<String, String>> {
+    val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val mi = ActivityManager.MemoryInfo()
         am.getMemoryInfo(mi)
         val memTotal = mi.totalMem / (1024L * 1024L)
@@ -2389,7 +2398,7 @@ private fun NeofetchBlock() {
             }
         }
         val wm = context.resources.displayMetrics
-        listOf(
+        return listOf(
             "OS" to "Ubuntu 26.04.1 LTS $abi",
             "Host" to Build.MODEL,
             "Kernel" to "7.2.2-070202-generic",
@@ -2403,6 +2412,14 @@ private fun NeofetchBlock() {
             "Memory" to "${memUsed}MiB / ${memTotal}MiB",
             "Disk (/)" to "${diskUsedG}G / ${diskTotalG}G ($diskPct%)"
         )
+}
+
+@Composable
+private fun NeofetchBlock() {
+    val context = LocalContext.current
+    var info by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
+    LaunchedEffect(Unit) {
+        info = withContext(Dispatchers.IO) { collectNeofetchInfo(context) }
     }
 
     Column {
@@ -2436,7 +2453,7 @@ private fun NeofetchBlock() {
             color = Color(0xFFE95420)
         )
         Spacer(modifier = Modifier.height(4.dp))
-        info.forEach { (label, value) ->
+        info.orEmpty().forEach { (label, value) ->
             Text(
                 text = buildAnnotatedString {
                     withStyle(SpanStyle(color = Color(0xFFE95420), fontWeight = FontWeight.Bold)) {
@@ -2490,15 +2507,18 @@ fun EasterEggTerminalScreen(
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
 
-    BackHandler { onExit() }
-
-    val lyrics = remember(context) {
-        try {
-            val content = extractLyricsFromOgg(context)
-            parseAndCleanLrc(content)
-        } catch (_: Exception) {
-            emptyList()
+    // Parsing scans the 2.8 MB OGG for the LYRICS comment — keep it off the main thread.
+    var lyrics by remember { mutableStateOf(emptyList<CleanLyric>()) }
+    var lyricsLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(context) {
+        lyrics = withContext(Dispatchers.IO) {
+            try {
+                parseAndCleanLrc(extractLyricsFromOgg(context))
+            } catch (_: Exception) {
+                emptyList()
+            }
         }
+        lyricsLoaded = true
     }
 
     var currentPosMs by remember { mutableLongStateOf(0L) }
@@ -2510,6 +2530,17 @@ fun EasterEggTerminalScreen(
     var rmCommandTyped by remember { mutableStateOf("") }
     var showRmOutput by remember { mutableStateOf(false) }
     var showSudoPassword by remember { mutableStateOf(false) }
+
+    // Exit stops the audio immediately; the player itself is only released on dispose,
+    // which runs after the AnimatedContent fade-out and would otherwise let the song
+    // ring on for the whole transition.
+    val exitSession = {
+        try {
+            mediaPlayerInstance?.let { player -> if (player.isPlaying) player.pause() }
+        } catch (_: Exception) {}
+        onExit()
+    }
+    BackHandler { exitSession() }
 
     // Command typing animation on entry (Authentic Linux CLI invocation)
     val fullCommand = "./coralsea-cli -f coralsea.ogg --lyrics"
@@ -2614,7 +2645,12 @@ fun EasterEggTerminalScreen(
                 Lifecycle.Event.ON_RESUME -> {
                     try {
                         if (player != null && isCommandEntered && !player.isPlaying && !isSongFinished) {
-                            player.start()
+                            // Re-acquire focus before resuming: after another app took it
+                            // (e.g. a music player), silently resuming would fight it.
+                            val granted = audioManager?.requestAudioFocus(focusRequest)
+                            if (granted == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                                player.start()
+                            }
                         }
                     } catch (_: Exception) {}
                 }
@@ -2686,7 +2722,7 @@ fun EasterEggTerminalScreen(
         delay(1200)
         showFinalPrompt = true
         delay(3000)
-        onExit()
+        exitSession()
     }
 
     // Player creation failed: print the failure output once the command prompt has
@@ -2696,7 +2732,7 @@ fun EasterEggTerminalScreen(
         delay(500)
         showPlayerError = true
         delay(3200)
-        onExit()
+        exitSession()
     }
 
     val displayedCount = if (isCommandEntered && !playerFailed) (activeIndex + 1).coerceAtLeast(0) else 0
@@ -2773,10 +2809,16 @@ fun EasterEggTerminalScreen(
             .statusBarsPadding()
             .navigationBarsPadding()
             // Long-press anywhere for 3s to jump to the last 10 seconds of the song.
+            // Implemented with a raw gesture loop so a slow DRAG of the lyrics list
+            // (finger down and moving) disarms the timer instead of firing the seek
+            // mid-scroll, which the tap-detector version did after any 3s touch.
             .pointerInput(mediaPlayerInstance, totalDurationMs) {
-                detectTapGestures(
-                    onPress = {
-                        val job = coroutineScope.launch {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val downPos = down.position
+                    var seekJob: Job? = null
+                    try {
+                        seekJob = coroutineScope.launch {
                             delay(3000)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             val player = mediaPlayerInstance
@@ -2791,10 +2833,16 @@ fun EasterEggTerminalScreen(
                                 currentPosMs = targetMs.toLong()
                             }
                         }
-                        tryAwaitRelease()
-                        job.cancel()
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull() ?: break
+                            if (!change.pressed) break
+                            if ((change.position - downPos).getDistance() > viewConfiguration.touchSlop) break
+                        }
+                    } finally {
+                        seekJob?.cancel()
                     }
-                )
+                }
             }
     ) {
         Column(
@@ -2921,7 +2969,7 @@ fun EasterEggTerminalScreen(
                 }
 
                 // Fallback notice when the OGG container carries no LYRICS= comment
-                if (displayedIntroCount == introLogs.size && lyrics.isEmpty()) {
+                if (displayedIntroCount == introLogs.size && lyricsLoaded && lyrics.isEmpty()) {
                     item(key = "no_lyrics_notice") {
                         Text(
                             text = buildAnnotatedString {

@@ -64,8 +64,15 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     private var faceDownStartTime: Long = 0L
 
-    private var previousInterruptionFilter: Int = NotificationManager.INTERRUPTION_FILTER_ALL
     private var wasDndActivatedByService: Boolean = false
+
+    // Gravity/gyroscope run at the low-power UI rate except while a flip-down countdown is
+    // pending, when they are oversampled so hand tremor is not aliased (see registerSensors).
+    private var usingFastSensorRate: Boolean = false
+
+    // Notification channels are per-locale (see createNotificationChannel); this is the one
+    // the foreground notification currently lives in.
+    private var currentChannelId: String = CHANNEL_ID
 
     private enum class TargetFlipState { NONE, DOWN, UP }
     private var pendingTargetState: TargetFlipState = TargetFlipState.NONE
@@ -90,6 +97,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
                 } else {
                     Log.i(TAG, "Cancelling debounce countdown: phone tilted or moved (Z=$currentZValue, H=$hMag)")
                     pendingTargetState = TargetFlipState.NONE
+                    setFastSensorRate(false)
                     return@Runnable
                 }
             }
@@ -101,6 +109,8 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             } else {
                 Log.i(TAG, "Debounce finished but phone not stationary/flat (Z=$currentZValue, H=$hMag, dG=$currentDeltaG, gyro=$currentGyroRotation) -> skip DND")
             }
+            // The countdown ended either way; return to the low-power UI sampling rate.
+            setFastSensorRate(false)
         } else if (pendingTargetState == TargetFlipState.UP && currentlyFlipped) {
             val isExitCondition = (currentZValue > FACE_DOWN_EXIT_Z_THRESHOLD) ||
                     (hMag > EXIT_HORIZONTAL_GRAVITY) ||
@@ -116,6 +126,22 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
+    // Language switched in the app while the service is up: build the new locale's channel,
+    // move the foreground notification over, then retire the old channel — deleting the
+    // channel that currently hosts the notification would cancel it outright.
+    private val languagePrefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == PrefsKeys.KEY_LANGUAGE_MODE) {
+            val oldChannelId = currentChannelId
+            createNotificationChannel()
+            updateNotification(active = _isDndActive.value)
+            if (oldChannelId != currentChannelId &&
+                notifManager.getNotificationChannel(oldChannelId) != null
+            ) {
+                notifManager.deleteNotificationChannel(oldChannelId)
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate")
@@ -123,6 +149,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         vibrator = (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
         prefs = getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener(languagePrefListener)
 
         gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -139,9 +166,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             val systemDndStillOn = notifManager.isNotificationPolicyAccessGranted &&
                     notifManager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL
             if (systemDndStillOn) {
-                previousInterruptionFilter = prefs.getInt(
-                    PrefsKeys.KEY_PREV_INTERRUPTION_FILTER, NotificationManager.INTERRUPTION_FILTER_ALL
-                )
                 wasDndActivatedByService = prefs.getBoolean(PrefsKeys.KEY_WAS_DND_ACTIVATED_BY_SERVICE, false)
                 _isDndActive.value = true
                 _isFlippedDown.value = true
@@ -169,15 +193,18 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
         Log.i(TAG, "onStartCommand")
         startForeground(NOTIFICATION_ID, buildNotification(active = _isDndActive.value))
 
-        // registerSensors() removes any pending debounce runnable; a stranded
-        // pendingTargetState here would permanently block future flip detection.
+        // A debounce runnable stranded by a previous session would reference a stale
+        // pendingTargetState and permanently block future flip detection.
         pendingTargetState = TargetFlipState.NONE
+        handler.removeCallbacks(debounceRunnable)
+        usingFastSensorRate = false
         registerSensors()
         _isRunning.value = true
         return START_STICKY
     }
 
     override fun onDestroy() {
+        prefs.unregisterOnSharedPreferenceChangeListener(languagePrefListener)
         unregisterAllSensors()
         restoreDndIfNeeded()
         pendingTargetState = TargetFlipState.NONE
@@ -193,22 +220,28 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     private fun registerSensors() {
         unregisterAllSensors()
 
+        // SENSOR_DELAY_UI (~15 Hz) aliases 8-12 Hz hand tremor below the stillness thresholds
+        // (Nyquist ~7.5 Hz), which defeated the mid-air false-trigger filter. While a flip-down
+        // countdown is running, oversample the motion sensors at ~50 Hz instead; the low-power
+        // UI rate is restored as soon as the countdown ends or is cancelled.
+        val motionDelay = if (usingFastSensorRate) SensorManager.SENSOR_DELAY_GAME else SensorManager.SENSOR_DELAY_UI
+
         activeOrientationSensor?.let { sensor ->
             val registered = sensorManager.registerListener(
                 this,
                 sensor,
-                SensorManager.SENSOR_DELAY_UI
+                motionDelay
             )
-            Log.i(TAG, "Registered orientation sensor ${sensor.name}, success=$registered")
+            Log.i(TAG, "Registered orientation sensor ${sensor.name}, delay=$motionDelay, success=$registered")
         }
 
         gyroscopeSensor?.let { gyro ->
             val registered = sensorManager.registerListener(
                 this,
                 gyro,
-                SensorManager.SENSOR_DELAY_UI
+                motionDelay
             )
-            Log.i(TAG, "Registered gyroscope sensor ${gyro.name}, success=$registered")
+            Log.i(TAG, "Registered gyroscope sensor ${gyro.name}, delay=$motionDelay, success=$registered")
         }
 
         proximitySensor?.let { prox ->
@@ -222,8 +255,16 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     }
 
     private fun unregisterAllSensors() {
+        // Deliberately does not touch handler callbacks: setFastSensorRate() re-registers the
+        // listeners while a countdown may be pending and must not cancel it. Lifecycle call
+        // sites that really need the runnable gone remove it explicitly.
         sensorManager.unregisterListener(this)
-        handler.removeCallbacks(debounceRunnable)
+    }
+
+    private fun setFastSensorRate(fast: Boolean) {
+        if (usingFastSensorRate == fast) return
+        usingFastSensorRate = fast
+        registerSensors()
     }
 
     // ── Sensor Events ──────────────────────────────────────────────────────
@@ -315,6 +356,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
                     pendingTargetState = TargetFlipState.DOWN
                     faceDownStartTime = SystemClock.elapsedRealtime()
                     handler.postDelayed(debounceRunnable, FIXED_DEBOUNCE_DOWN_MS)
+                    setFastSensorRate(true)
                     Log.i(TAG, "Scheduled DOWN debounce timer (${FIXED_DEBOUNCE_DOWN_MS}ms from T0), Z=$currentZValue, H=$hMag")
                 }
             } else {
@@ -322,6 +364,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
                 if (pendingTargetState == TargetFlipState.DOWN) {
                     handler.removeCallbacks(debounceRunnable)
                     pendingTargetState = TargetFlipState.NONE
+                    setFastSensorRate(false)
                     Log.i(TAG, "Cancelled pending DOWN debounce timer (phone tilted or moved), Z=$currentZValue, H=$hMag")
                 }
             }
@@ -358,7 +401,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             val currentFilter = notifManager.currentInterruptionFilter
             if (currentFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
                 // DND was OFF when user flipped down -> service activates DND
-                previousInterruptionFilter = currentFilter
                 notifManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
                 wasDndActivatedByService = true
                 Log.i(TAG, "DND mode activated by service (from INTERRUPTION_FILTER_ALL)")
@@ -393,10 +435,12 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
                 if (wasDndActivatedByService) {
                     // Only restore when the filter is still the one this service set; if the user
                     // changed DND manually while face down, leave their choice intact.
+                    // The service only ever activates DND from INTERRUPTION_FILTER_ALL, so ALL
+                    // always reproduces the pre-flip state.
                     val currentFilter = notifManager.currentInterruptionFilter
                     if (currentFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY) {
-                        notifManager.setInterruptionFilter(previousInterruptionFilter)
-                        Log.i(TAG, "DND disabled, restored interruptionFilter=$previousInterruptionFilter")
+                        notifManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
+                        Log.i(TAG, "DND disabled, restored interruptionFilter=ALL")
                     } else {
                         Log.i(TAG, "DND was modified externally during flip-down ($currentFilter); leaving system DND state untouched")
                     }
@@ -423,7 +467,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
                     wasDndActivatedByService &&
                     notifManager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
                 ) {
-                    notifManager.setInterruptionFilter(previousInterruptionFilter)
+                    notifManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
                 }
                 persistState(active = false)
                 _isDndActive.value = false
@@ -438,7 +482,6 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     private fun persistState(active: Boolean) {
         prefs.edit()
             .putBoolean(PrefsKeys.KEY_DND_ACTIVE, active)
-            .putInt(PrefsKeys.KEY_PREV_INTERRUPTION_FILTER, previousInterruptionFilter)
             .putBoolean(PrefsKeys.KEY_WAS_DND_ACTIVATED_BY_SERVICE, wasDndActivatedByService)
             .apply()
     }
@@ -491,26 +534,10 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     // ── Notifications ──────────────────────────────────────────────────────
 
     private fun getLocalizedText(key: String): String {
-        val langMode = if (::prefs.isInitialized) prefs.getInt("language_mode", 0) else 0
-        val isTrad: Boolean
-        val isEng: Boolean
-        if (langMode == 0) {
-            val locale = resources.configuration.locales.get(0)
-            val lang = locale.language
-            val country = locale.country
-            if (lang.startsWith("zh")) {
-                isEng = false
-                isTrad = country.equals("TW", ignoreCase = true) ||
-                         country.equals("HK", ignoreCase = true) ||
-                         country.equals("MO", ignoreCase = true)
-            } else {
-                isEng = true
-                isTrad = false
-            }
-        } else {
-            isEng = (langMode == 3)
-            isTrad = (langMode == 2)
-        }
+        val langMode = if (::prefs.isInitialized) prefs.getInt(PrefsKeys.KEY_LANGUAGE_MODE, 0) else 0
+        val lang = Localization.resolve(this, langMode)
+        val isEng = lang == AppLanguage.ENGLISH
+        val isTrad = lang == AppLanguage.TRADITIONAL
 
         return when (key) {
             "channel_name" -> if (isEng) "Flip to Shhh Service" else if (isTrad) "Flip to Shhh 服務" else "Flip to Shhh 服务"
@@ -526,17 +553,19 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
     private fun createNotificationChannel() {
         val name = getLocalizedText("channel_name")
         val desc = getLocalizedText("channel_desc")
-        // Channel names are frozen at creation time by the system; recreate when the
-        // app language changes so the name follows the active locale.
-        val existing = notifManager.getNotificationChannel(CHANNEL_ID)
-        if (existing != null && existing.name?.toString() != name) {
-            notifManager.deleteNotificationChannel(CHANNEL_ID)
+        // Channel names are frozen at creation time by the system, so each locale gets its own
+        // channel ID. A language switch never deletes the channel currently hosting the
+        // foreground notification (deletion would cancel it and reset user settings); the old
+        // channel is retired by the caller only after the notification has been re-posted.
+        val channelId = "${CHANNEL_ID}_${Integer.toHexString(name.hashCode())}"
+        if (notifManager.getNotificationChannel(channelId) == null) {
+            val channel = NotificationChannel(channelId, name, NotificationManager.IMPORTANCE_MIN).apply {
+                description = desc
+                setShowBadge(false)
+            }
+            notifManager.createNotificationChannel(channel)
         }
-        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_MIN).apply {
-            description = desc
-            setShowBadge(false)
-        }
-        notifManager.createNotificationChannel(channel)
+        currentChannelId = channelId
     }
 
     private fun updateNotification(active: Boolean) {
@@ -550,7 +579,7 @@ class FlipToShhhService : LifecycleService(), SensorEventListener {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, currentChannelId)
             .setSmallIcon(R.drawable.ic_notification_shhh)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

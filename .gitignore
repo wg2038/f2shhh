@@ -36,3 +36,5 @@ app/build/
 
 # Release signing credentials
 keystore.properties
+*.jks
+*.keystore
