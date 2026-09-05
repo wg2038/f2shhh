@@ -2410,7 +2410,8 @@ private fun collectNeofetchInfo(context: Context): List<Pair<String, String>> {
             "Terminal" to "gnome-terminal",
             "CPU" to cpuLine,
             "Memory" to "${memUsed}MiB / ${memTotal}MiB",
-            "Disk (/)" to "${diskUsedG}G / ${diskTotalG}G ($diskPct%)"
+            "Disk (/)" to "${diskUsedG}G / ${diskTotalG}G ($diskPct%)",
+            "Installed" to "2016-02-15"
         )
 }
 

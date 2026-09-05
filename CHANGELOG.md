@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > Maintenance release for the easter-egg edition: ports the official v1.4.0 robustness fixes onto the v2 line and fixes the easter-egg terminal issues found in review. The edition resumes maintenance; it is no longer frozen at 2.1.5.
 
+### Added
+- **Easter-egg neofetch install date**: the fictional system now reports when it was "installed".
+
 ### Fixed
 - **Easter-egg terminal no longer fights other audio apps**: returning to the app after another player took audio focus re-requests focus before resuming instead of silently restarting playback on top of it.
 - **Slow drags of the lyric list no longer fire the long-press seek**: the 3-second hold-to-skip gesture is now a raw gesture loop that disarms as soon as the pointer moves beyond the touch slop, so scrolling the lyrics for longer than 3 s cannot jump to the last 10 seconds mid-scroll.
