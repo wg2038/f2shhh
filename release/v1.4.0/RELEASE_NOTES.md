@@ -38,8 +38,8 @@
 
 ## 升级说明
 
-- 本版 APK 与仓库内随 v1.3.0 提交的 `release/v1.3.0/f2shhh-v1.3.0-release.apk` 使用同一调试签名，可直接覆盖升级。
-- 若你此前安装的是 GitHub Release 页面上由 CI 构建的 `app-release.apk`（CI 使用运行器临时生成的调试密钥，签名不同），覆盖安装会提示签名冲突，请先卸载再安装。应用不产生用户数据，卸载无损失。
+- 本版起改用专用正式签名密钥（`CN=Flip to Shhh`，有效期 30 年；此前所有版本均为调试签名）。从 v1.3.0 或更早版本升级需先卸载旧版再安装一次，此后所有版本将可直接覆盖升级。
+- 应用不产生用户数据，卸载重装无损失。
 
 ---
 
@@ -83,5 +83,5 @@ Date: 2026-09-05 ｜ versionCode 8
 
 ## Upgrade notes
 
-- This APK is signed with the same debug key as `release/v1.3.0/f2shhh-v1.3.0-release.apk` committed in the repository, so it installs as a direct upgrade over that build.
-- If you installed the CI-built `app-release.apk` from the GitHub v1.3.0 release page (CI signs with an ephemeral debug key on the runner, so the signature differs), an in-place upgrade will fail with a signature conflict — uninstall first, then install. The app stores no user data, so nothing is lost.
+- Starting with this release the APK is signed with a dedicated release key (`CN=Flip to Shhh`, valid for 30 years; all previous builds used a debug signature). Upgrading from v1.3.0 or earlier requires a one-time uninstall before installing; every later version upgrades in place.
+- The app stores no user data, so the uninstall loses nothing.

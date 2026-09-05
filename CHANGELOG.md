@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Removed the dead "previous interruption filter" bookkeeping: the service only ever activates DND from `INTERRUPTION_FILTER_ALL`, so restoring to ALL always reproduces the pre-flip state.
 - Removed the unused `MODIFY_AUDIO_SETTINGS` permission.
+- Adopted a dedicated release signing key (all earlier builds were debug-signed); CI release builds now sign via encrypted repo secrets. See the v1.4.0 release notes for the one-time uninstall step when upgrading from older builds.
 
 ---
 
