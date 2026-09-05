@@ -128,27 +128,9 @@ object OneUiTypography {
 
 object AppStrings {
     fun get(context: Context, key: String, langMode: Int): String {
-        val isTrad: Boolean
-        val isEng: Boolean
-
-        if (langMode == 0) {
-            val locale = context.resources.configuration.locales.get(0)
-            val lang = locale.language
-            val country = locale.country
-            if (lang.startsWith("zh")) {
-                isEng = false
-                isTrad = country.equals("TW", ignoreCase = true) ||
-                         country.equals("HK", ignoreCase = true) ||
-                         country.equals("MO", ignoreCase = true) ||
-                         locale.script.equals("Hant", ignoreCase = true)
-            } else {
-                isEng = true
-                isTrad = false
-            }
-        } else {
-            isEng = (langMode == 3)
-            isTrad = (langMode == 2)
-        }
+        val lang = Localization.resolve(context, langMode)
+        val isEng = lang == AppLanguage.ENGLISH
+        val isTrad = lang == AppLanguage.TRADITIONAL
 
         return when (key) {
             "app_name" -> "Flip to Shhh"
@@ -680,7 +662,8 @@ fun OnboardingPermissionItem(
     onAction: () -> Unit
 ) {
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+    // Follow the ACTIVE app theme (which may override the system setting), not the system theme.
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val warningColor = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
     val warningBgColor = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB)
 
@@ -835,7 +818,8 @@ fun FlipToShhhScreen(
 
                         // 2. Missing DND permission warning banner (only when DND not granted)
                         if (!hasDndPermission) {
-                            val isDark = isSystemInDarkTheme()
+                            // Follow the ACTIVE app theme (which may override the system setting).
+                            val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
                             Spacer(modifier = Modifier.height(8.dp))
                             Card(
                                 modifier = Modifier
@@ -910,7 +894,7 @@ fun FlipToShhhScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()))
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
 
@@ -1387,6 +1371,7 @@ fun SettingsBottomSheet(
     if (!visible) return
 
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val haptic = LocalHapticFeedback.current
     val prefs = remember { context.getSharedPreferences(PrefsKeys.PREFS_NAME, Context.MODE_PRIVATE) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -1397,6 +1382,21 @@ fun SettingsBottomSheet(
     var autoStartEnabled by remember { mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_AUTO_START_BOOT, true)) }
     // Keep the default identical to FlipToShhhService's PrefsKeys.KEY_AUTO_LOCK_SCREEN default (true).
     var autoLockEnabled by remember { mutableStateOf(prefs.getBoolean(PrefsKeys.KEY_AUTO_LOCK_SCREEN, true)) }
+    // Flip-to-lock only takes effect while the accessibility service is actually enabled;
+    // re-check on every resume so the switch reflects reality after returning from Settings.
+    var accessibilityEnabled by remember {
+        mutableStateOf(FlipLockAccessibilityService.isAccessibilityServiceEnabled(context))
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                accessibilityEnabled = FlipLockAccessibilityService.isAccessibilityServiceEnabled(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -1557,7 +1557,9 @@ fun SettingsBottomSheet(
                                     )
                                 }
                                 Switch(
-                                    checked = autoLockEnabled,
+                                    // Effective state: the preference alone does nothing while
+                                    // the accessibility lock service is disabled.
+                                    checked = autoLockEnabled && accessibilityEnabled,
                                     onCheckedChange = { enabled ->
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         autoLockEnabled = enabled

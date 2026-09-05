@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-09-05 (Official Release)
+
+### Fixed
+- **Hand-tremor filter no longer defeated by sampling aliasing**: gravity/gyroscope now oversample at ~50 Hz (`SENSOR_DELAY_GAME`) while a flip-down countdown is running, so 8–12 Hz hand tremor can no longer fold below the stillness thresholds at the previous ~15 Hz UI rate. The low-power UI rate is restored as soon as the countdown ends or is cancelled.
+- **Language switching no longer flickers the foreground notification**: each locale gets its own notification channel; the old channel is retired only after the notification has been re-posted, instead of deleting the channel hosting the live notification.
+- **Warning banners follow the in-app theme**: onboarding permission cards and the DND warning banner now derive dark/light warning colors from the active app theme instead of the system theme (mismatched colors when the in-app theme override differs from the system).
+- **Flip-to-Lock switch reflects reality**: the settings switch now shows the effective state (preference AND accessibility service actually enabled) and re-checks whenever the app resumes.
+- Bottom layout no longer double-counts the navigation-bar inset.
+- Shared locale resolution extracted into `Localization` (used by both `AppStrings` and the service notification texts).
+
+### Changed
+- Removed the dead "previous interruption filter" bookkeeping: the service only ever activates DND from `INTERRUPTION_FILTER_ALL`, so restoring to ALL always reproduces the pre-flip state.
+- Removed the unused `MODIFY_AUDIO_SETTINGS` permission.
+
+---
+
 ## [1.3.0] - 2026-08-29 (Official Release)
 
 ### Fixed
