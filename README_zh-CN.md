@@ -10,7 +10,7 @@
   </p>
   <p align="center">
     <a href="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml"><img src="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
-    <a href="https://github.com/wg2038/f2shhh/releases"><img src="https://img.shields.io/badge/Release-v2.1.5-0057FF?style=flat-square&logo=github" alt="Latest Release"></a>
+    <a href="https://github.com/wg2038/f2shhh/releases"><img src="https://img.shields.io/badge/Release-v2.1.5.3-0057FF?style=flat-square&logo=github" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
     <img src="https://img.shields.io/badge/Designed_For-Non--Pixel_Android_13%2B-0057FF?style=flat-square" alt="Android 13+">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
@@ -40,7 +40,7 @@
 
 ## 📖 项目简介
 
-**Flip to Shhh** 是一款开源、纯净、无广告、极度轻量（~2.2 MB）的后台常驻静音工具。致力于为所有**非 Pixel 的 Android 13+ 设备**（包括三星 One UI、小米 HyperOS、OPPO ColorOS、vivo OriginOS、一加 OxygenOS、摩托罗拉等）带来媲美 Google Pixel 原生的 **Flip to Shhh（翻转开启勿扰）** 体验。
+**Flip to Shhh** 是一款开源、纯净、无广告、极度轻量（~5.1 MB）的后台常驻静音工具。致力于为所有**非 Pixel 的 Android 13+ 设备**（包括三星 One UI、小米 HyperOS、OPPO ColorOS、vivo OriginOS、一加 OxygenOS、摩托罗拉等）带来媲美 Google Pixel 原生的 **Flip to Shhh（翻转开启勿扰）** 体验。
 
 只需将手机屏幕朝下平扣在桌面或平整物体上保持 2 秒，伴随清脆利落的“咚 - 咚”双脉冲触感反馈，自动开启勿扰模式（DND）并可联动原生熄屏锁屏。拿起或翻正手机时，将在 300ms 内灵敏恢复原有响铃状态。
 
@@ -54,7 +54,7 @@
 - 🧠 **智能 DND 归属追踪**：自动识别系统原有的定时勿扰规则（如 23:00–07:00 睡眠勿扰）。翻转拿起时绝不会误关闭系统原本已开启的定时勿扰。
 - ⚡ **超低后台功耗**：采用硬件级传感器低频事件分发，避免 CPU 冗余唤醒，保持系统深度休眠（Deep Sleep）。
 - 🛡️ **100% 完全本地与零隐私收集**：Manifest 中**未声明任何网络权限**（`INTERNET` 权限完全剔除），无任何数据统计 SDK、无跟踪、无广告。
-- 🚀 **极限界限瘦身（~2.2 MB）**：纯 Kotlin 与 Jetpack Compose 打造，手写精简矢量图资产，相较臃肿图标库瘦身 96%。
+- 🚀 **极限界限瘦身（~5.1 MB）**：纯 Kotlin 与 Jetpack Compose 打造，手写精简矢量图资产，相较臃肿图标库瘦身 96%。
 - 🎨 **Samsung One UI 风格美学设计**：灵动呼吸感主控中心，完美适配 Material You 与 One UI 动态取色壁纸主题，内置简 / 繁 / 英三语动态无缝切换。
 
 ---
@@ -185,7 +185,7 @@ cd f2shhh
 ```
 
 编译输出的正式安装包位于：
-`app/build/outputs/apk/release/app-release.apk` (~2.2 MB)
+`app/build/outputs/apk/release/app-release.apk` (~5.1 MB)
 
 ---
 

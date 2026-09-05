@@ -10,7 +10,7 @@
   </p>
   <p align="center">
     <a href="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml"><img src="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
-    <a href="https://github.com/wg2038/f2shhh/releases"><img src="https://img.shields.io/badge/Release-v2.1.5-0057FF?style=flat-square&logo=github" alt="Latest Release"></a>
+    <a href="https://github.com/wg2038/f2shhh/releases"><img src="https://img.shields.io/badge/Release-v2.1.5.3-0057FF?style=flat-square&logo=github" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
     <img src="https://img.shields.io/badge/Designed_For-Non--Pixel_Android_13%2B-0057FF?style=flat-square" alt="Android 13+">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
@@ -40,7 +40,7 @@
 
 ## 📖 Introduction
 
-**Flip to Shhh** is an open-source, privacy-first, ultra-lightweight (~2.2 MB) background utility designed to bring Google Pixel's signature **Flip to Shhh (Flip to Do Not Disturb)** feature to all non-Pixel Android 13+ devices (including Samsung One UI, Xiaomi HyperOS, OPPO ColorOS, vivo OriginOS, OnePlus OxygenOS, Motorola MyUX, etc.).
+**Flip to Shhh** is an open-source, privacy-first, ultra-lightweight (~5.1 MB) background utility designed to bring Google Pixel's signature **Flip to Shhh (Flip to Do Not Disturb)** feature to all non-Pixel Android 13+ devices (including Samsung One UI, Xiaomi HyperOS, OPPO ColorOS, vivo OriginOS, OnePlus OxygenOS, Motorola MyUX, etc.).
 
 Simply place your phone face down flat on a desk or table for 2 seconds. The app instantly enables Do Not Disturb (DND) mode with crisp dual-pulse tactile haptic feedback and optional screen locking. Picking up or flipping the phone face-up automatically restores normal ringer settings within 300ms.
 
@@ -54,7 +54,7 @@ Simply place your phone face down flat on a desk or table for 2 seconds. The app
 - 🧠 **Smart DND Ownership Tracking**: Intelligently detects pre-existing system DND schedules (e.g., bedtime mode from 23:00 to 07:00). Flipping up will never inadvertently disable an active system schedule.
 - ⚡ **Ultra-Low Power Consumption**: Leverages hardware sensor event processing and minimal event callbacks, allowing the CPU to stay in deep sleep.
 - 🛡️ **100% Offline & Zero Telemetry**: Manifest contains **zero network permissions** (`INTERNET` permission is completely omitted). No analytics, no ads, zero data collected.
-- 🚀 **Extreme APK Slimming (~2.2 MB)**: Pure Kotlin and Jetpack Compose with custom vector assets, achieving a 96% size reduction compared to standard icon packs.
+- 🚀 **Extreme APK Slimming (~5.1 MB)**: Pure Kotlin and Jetpack Compose with custom vector assets, achieving a 96% size reduction compared to standard icon packs.
 - 🎨 **Samsung One UI Inspired Aesthetic**: Smooth breathing hero centerpiece, dynamic Material You / One UI palette adaptation, and full tri-lingual localization (Simplified Chinese, Traditional Chinese, English).
 
 ---
@@ -185,7 +185,7 @@ cd f2shhh
 ```
 
 The compiled release APK is located at:
-`app/build/outputs/apk/release/app-release.apk` (~2.2 MB)
+`app/build/outputs/apk/release/app-release.apk` (~5.1 MB)
 
 ---
 

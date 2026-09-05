@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.5.3] - 2026-09-05 (Easter Egg Polish · 彩蛋收尾)
+
+### Added
+- **Easter-egg neofetch install date**: the fictional system now reports when it was "installed". (Shipped in 2.1.5.2's build; versioned here.)
+
+### Changed
+- `versionName` 2.1.5.2 → 2.1.5.3; `versionCode` stays 7 — the easter-egg line keeps its own numbering and never climbs toward the official line's numbers (official v1.4.0 is 8), so the two editions remain independent and never upgrade over each other.
+- Android CI now also builds the easter-egg line's release branches (`release-v2.*`).
+- README (three languages) refreshed for the easter-egg line: release badge and APK size (~5.1 MB including the embedded audio).
+
+### Fixed
+- Removed an unused import left behind by the long-press gesture rework.
+
+---
+
 ## [2.1.5.2] - 2026-09-05 (Easter Egg Maintenance · 彩蛋维护版)
 
 > Maintenance release for the easter-egg edition: ports the official v1.4.0 robustness fixes onto the v2 line and fixes the easter-egg terminal issues found in review. The edition resumes maintenance; it is no longer frozen at 2.1.5.

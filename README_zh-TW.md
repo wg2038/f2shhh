@@ -10,7 +10,7 @@
   </p>
   <p align="center">
     <a href="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml"><img src="https://github.com/wg2038/f2shhh/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
-    <a href="https://github.com/wg2038/f2shhh/releases"><img src="https://img.shields.io/badge/Release-v2.1.5-0057FF?style=flat-square&logo=github" alt="Latest Release"></a>
+    <a href="https://github.com/wg2038/f2shhh/releases"><img src="https://img.shields.io/badge/Release-v2.1.5.3-0057FF?style=flat-square&logo=github" alt="Latest Release"></a>
     <img src="https://img.shields.io/badge/Platform-Android_13%2B_(API_33%2B)-brightgreen?style=flat-square&logo=android" alt="Platform">
     <img src="https://img.shields.io/badge/Designed_For-Non--Pixel_Android_13%2B-0057FF?style=flat-square" alt="Android 13+">
     <img src="https://img.shields.io/badge/Language-Kotlin_/_Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin">
@@ -40,7 +40,7 @@
 
 ## 📖 專案簡介
 
-**Flip to Shhh** 是一款開源、純淨、無廣告、極致輕量（~2.2 MB）的後台常駐靜音工具。致力於為所有**非 Pixel 的 Android 13+ 裝置**（包括三星 One UI、小米 HyperOS、OPPO ColorOS、vivo OriginOS、OnePlus OxygenOS、Motorola 等）帶來媲美 Google Pixel 原生的 **Flip to Shhh（翻轉開啟勿擾）** 體驗。
+**Flip to Shhh** 是一款開源、純淨、無廣告、極致輕量（~5.1 MB）的後台常駐靜音工具。致力於為所有**非 Pixel 的 Android 13+ 裝置**（包括三星 One UI、小米 HyperOS、OPPO ColorOS、vivo OriginOS、OnePlus OxygenOS、Motorola 等）帶來媲美 Google Pixel 原生的 **Flip to Shhh（翻轉開啟勿擾）** 體驗。
 
 只需將手機螢幕朝下平放在桌面或平整物體上保持 2 秒，伴隨清脆俐落的「咚 - 咚」雙脈衝觸感反饋，自動開啟勿擾模式（DND）並可連動原生熄屏鎖屏。拿起或翻正手機時，將在 300ms 內靈敏恢復原有響鈴狀態。
 
@@ -54,7 +54,7 @@
 - 🧠 **智慧 DND 歸屬追蹤**：自動識別系統原有的定時勿擾規則（如 23:00–07:00 睡眠勿擾）。翻轉拿起時絕不會誤關閉系統原本已開啟的定時勿擾。
 - ⚡ **超低後台功耗**：採用硬體級感測器低頻事件分發，避免 CPU 冗餘喚醒，保持系統深度睡眠（Deep Sleep）。
 - 🛡️ **100% 完全本地與零隱私收集**：Manifest 中**未聲明任何網絡權限**（`INTERNET` 權限完全剔除），無任何資料統計 SDK、無追蹤、無廣告。
-- 🚀 **極限界限瘦身（~2.2 MB）**：純 Kotlin 與 Jetpack Compose 打造，手寫精簡向量圖資產，相較臃腫圖示庫瘦身 96%。
+- 🚀 **極限界限瘦身（~5.1 MB）**：純 Kotlin 與 Jetpack Compose 打造，手寫精簡向量圖資產，相較臃腫圖示庫瘦身 96%。
 - 🎨 **Samsung One UI 風格美學設計**：靈動呼吸感主控中心，完美適配 Material You 與 One UI 動態取色桌布主題，內建簡 / 繁 / 英三語動態無縫切換。
 
 ---
@@ -185,7 +185,7 @@ cd f2shhh
 ```
 
 編譯輸出的正式安裝包位於：
-`app/build/outputs/apk/release/app-release.apk` (~2.2 MB)
+`app/build/outputs/apk/release/app-release.apk` (~5.1 MB)
 
 ---
 
